@@ -8,3 +8,5 @@
 !makefile
 *.pro.user
 !*.pro
+*PRE1
+

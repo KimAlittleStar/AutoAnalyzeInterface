@@ -1,7 +1,7 @@
 #ifndef MYSTRING_H
 #define MYSTRING_H
 #include<string>
-
+#include <vector>
 class MyString :public std::string
 {
 public:
@@ -20,6 +20,11 @@ public:
     MyString mid(std::size_t start,std::size_t lengh) const;
     MyString mid(int start,std::size_t lengh) const;
     MyString mid(std::size_t start,int lengh) const;
+
+    std::vector<MyString> splits(const MyString & ftm);
+
+    void removeAll(const char * str);
+    void removeAll(const MyString & str);
 
 };
 

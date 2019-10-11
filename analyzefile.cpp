@@ -1,5 +1,7 @@
 #include "analyzefile.h"
 #include <iostream>
+#include <string>
+#include <sstream>
 #include "mystring.h"
 AnalyzeFile::AnalyzeFile()
 {
@@ -31,9 +33,7 @@ bool AnalyzeFile::setInputfile(const MyString & inputfilePath)
         inputfile->close();
         inputfile->open(inputfilePath,std::ios::in );
     }
-    char txt[500];
-    inputfile->read(txt,500);
-    std::cout<<txt<<std::endl;
+    pushTo_interfaceLib(inputfile);
     return true;
 }
 
@@ -78,9 +78,20 @@ bool AnalyzeFile::outputJava_file(MyString path  )
 int AnalyzeFile::pushTo_interfaceLib(std::ifstream* f)
 {
     MyString text;
-    *f>>text ;
-    std::vector<MyString> * facelist = getInterfaceList(text);
+    std::stringstream bf;
+    bf << f->rdbuf();
+    text = bf.str();
+    std::cout<< "text content:"<<text<<std::endl;
 
+    std::vector<MyString> * facelist = getInterfaceList(text);
+    for(std::size_t i = 0;i<facelist->size();i++)
+    {
+        Interface *iface = new Interface();
+        iface->fillInterface(facelist->at(i));
+        /// @todo 校验接口号是否存在 不存在才能继续加入;
+        interfaceLib.push_back(*iface);
+        delete iface;
+    }
     return static_cast<int>(facelist->size());
 }
 
@@ -88,20 +99,46 @@ std::vector<MyString>* AnalyzeFile::getInterfaceList(const MyString& text)
 {
     std::vector<MyString>* ret = new std::vector<MyString>();
 
-    size_t blockcomment_star = text.find_first_of("/*");
-    size_t blockcomment_end = text.find_first_of("*/");
+    size_t blockcomment_star = text.find("/*");
+    size_t blockcomment_end = text.find("*/");
     filecomment = text.mid(blockcomment_star,blockcomment_end-blockcomment_star+2);
-
+    std::cout<<"filecomment == "<<filecomment <<std::endl;
     //开始真正寻找接口字符块
 
     size_t istar = 0,iend = 0;
+    int bracketsDeep = 0;
+    int commentDeep = 0;
     for(size_t i = blockcomment_end;i < (text.size()-1);i++)
     {
-        if(text[i] == '/' && text[i+1] == '*')
+        if(text[i] == '/' && text[i+1] == '*' && commentDeep == 0)
         {
+            commentDeep = 1;
             istar = i;
         }
+        if(text[i] == '*' && text[i+1] == '/' && commentDeep == 1)
+        {
+            commentDeep = 0;
+        }
+        if(commentDeep == 0 && ((text[i]>='A' && text[i] <= 'Z') || (text[i]>='a' && text[i] <= 'z')))
+        {
+            if(istar == 0)
+                istar = i;
+        }
+        if(text[i] == '{' && commentDeep == 0)
+        {
+            bracketsDeep++;
+        }else if(text[i] == '}' && commentDeep == 0)
+        {
+            bracketsDeep--;
+            if(bracketsDeep == 0)
+            {
+                iend = i+1;
+                ret->push_back(text.mid(istar,iend-istar));
+                istar = 0;
+                iend = 0;
+            }
+        }
     }
-
+    return ret;
 
 }

@@ -114,7 +114,7 @@ int MyString::replace(const char* des ,const std::string & src,int index)
 
 /**
  ***********************************************************************************************
- * @brief mid  切割函数,@see std::string::substr
+ * @brief mid  切割函数, @see std::string::substr
  * @param start 开始的位置
  * @param lengh 长度
  * @return void
@@ -138,4 +138,111 @@ MyString MyString::mid(int start,std::size_t lengh) const
 MyString MyString::mid(std::size_t start,int lengh) const
 {
     return mid(start,static_cast<size_t>(lengh));
+}
+
+
+std::vector<MyString> MyString::splits(const MyString &ftm)
+{
+    // 判断是否有成对出现的 有成成对出现的 那么成对出现的只剥离一次;
+    int smartmode = 0;
+    if((ftm[0] == '(' && ftm[ftm.size()-1] == ')') ||
+       (ftm[0] == '[' && ftm[ftm.size()-1] == ']') ||
+       (ftm[0] == '{' && ftm[ftm.size()-1] == '}') ||
+       (ftm[0] == '<' && ftm[ftm.size()-1] == '>') ||
+       (ftm[0] == '\"' && ftm[ftm.size()-1] == '\"') ||
+       (ftm[0] == '\'' && ftm[ftm.size()-1] == '\'') )
+        smartmode = 1;
+    std::vector<MyString> ret;
+    ret.clear();
+    size_t lastindex = 0 ;
+    size_t flag = 0;
+    MyString temp;
+    int deep = 0;
+    for(size_t i = 0;i<size();i++)
+    {
+        if((flag = ftm.find(at(i))) != std::string::npos)
+        {
+            if(smartmode == 0)
+            {//没有配对出现的标志
+                if((i-lastindex) <2 && lastindex != 0)
+                {//检测到两个相邻的标致
+                    lastindex = i;
+                }else
+                {
+                    temp = substr(lastindex+(!!lastindex),i-lastindex-(!!lastindex));
+                    ret.push_back(temp);
+                    lastindex = i;
+                }
+            }else
+            {//出现需要配对的情况
+                if(flag == 0)
+                {
+                    if(deep == 0)           //如果现在检测到成对的第一个字符且深度为零,清空前面的字符作为一个整体
+                    {
+                        if((i-lastindex) <2 && lastindex != 0)
+                        {//检测到两个相邻的标致
+                            lastindex = i;
+                        }else
+                        {
+                            temp = substr(lastindex+(!!lastindex),i-lastindex-(!!lastindex));
+                            ret.push_back(temp);
+                            lastindex = i;
+                        }
+                    }
+                    deep++;
+
+                }else if(flag == (ftm.size()-1))
+                {//如果是配对的字符且深度为1 那么整个时候才能把字符串截取,否则中间全部跳过
+                    deep--;
+                    if(deep == 0)
+                    {
+                        if((i-lastindex) <2 && lastindex != 0)
+                        {//检测到两个相邻的标致
+                            lastindex = i;
+                        }else
+                        {
+                            temp = substr(lastindex+(!!lastindex),i-lastindex-(!!lastindex));
+                            ret.push_back(temp);
+                            lastindex = i;
+                        }
+                    }
+
+                }else if(deep == 0)
+                {
+                    if((i-lastindex) <2 && lastindex != 0)
+                    {//检测到两个相邻的标致
+                        lastindex = i;
+                    }else
+                    {
+                        temp = substr(lastindex+(!!lastindex),i-lastindex-(!!lastindex));
+                        ret.push_back(temp);
+                        lastindex = i;
+                    }
+                }
+            }
+        }
+    }
+    if((size()-lastindex) > 2)
+    {
+        temp = substr(lastindex+(!!lastindex),size()-lastindex-(!!lastindex));
+        ret.push_back(temp);
+    }
+    return ret;
+}
+
+
+
+
+
+
+
+void MyString::removeAll(const char * str)
+{
+    replace(str,"");
+}
+
+
+void  MyString::removeAll(const MyString & str)
+{
+    replace(str,"");
 }

@@ -1,6 +1,6 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
-#include<string>
+#include"mystring.h"
 #include"typedefine.h"
 
 class Interface
@@ -20,7 +20,8 @@ private:
     unsigned short interfaceID;
     TypeDefine retType;
     TypeDefine sendType;
-    std::string comment;
+    MyString comment;
+    MyString interfaceName;
 };
 
 #endif // INTERFACE_H

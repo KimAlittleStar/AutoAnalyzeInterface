@@ -3,7 +3,7 @@
 
 #include<vector>
 #include<string>
-
+#include"mystring.h"
 const static char* typeConvert[][3] =       // typestr,Cstr,JavaStr
 {
     {"u8"   ,   "unsigned char"  ,  "unsigned char"     },
@@ -35,6 +35,8 @@ public:
     const std::string getStrToCPP_file(void);
     const std::string getStrToHPP_file(void);
     const std::string getStrToJAVA_file(void);
+
+    bool fillTypedef(const MyString* str);
 private:
 
     std::vector<TypeElement> ele;

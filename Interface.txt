@@ -1,0 +1,51 @@
+/*
+*	文件说明
+*	字符测试:1234567890./*-+
+*	字母测试abcdefghijklmnopqrstuvwxzy
+*	符号测试 `!@#$%^&*()_)+|}{":?><~`-=[]\;',./
+*
+*
+*
+*
+*
+*/
+
+/*接口说明 { { }*/
+Ping = 0010
+{
+	Send = 
+	{
+		u8 data1;
+		u8 data2;
+		Sutdent 
+		{
+			u8 id;
+			u16 name;
+		} bob;
+	}
+	Return = 
+	{
+		u32 errCode;
+	}
+}
+
+
+Pings = 0x000F
+{
+	Send = 
+	{
+		u8 data1;
+		u8 data2;
+		Sutdent 
+		{
+			u8 id;
+			u16 name;
+		} bob;
+	}
+	Return = 
+	{
+		u32 errCode;
+	}
+}
+
+
