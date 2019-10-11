@@ -141,9 +141,11 @@ MyString MyString::mid(std::size_t start,int lengh) const
 }
 
 
-std::vector<MyString> MyString::splits(const MyString &ftm)
+std::vector<MyString> MyString::splits(const MyString &ftm) const
 {
     // 判断是否有成对出现的 有成成对出现的 那么成对出现的只剥离一次;
+    /// @bug 如果第一个字符就是匹配字符,那么就会降低一个字符也包括进去
+    /// @todo 把lastindex 初始化为-1 所有的事情都可以迎刃而解;
     int smartmode = 0;
     if((ftm[0] == '(' && ftm[ftm.size()-1] == ')') ||
        (ftm[0] == '[' && ftm[ftm.size()-1] == ']') ||
@@ -164,7 +166,7 @@ std::vector<MyString> MyString::splits(const MyString &ftm)
         {
             if(smartmode == 0)
             {//没有配对出现的标志
-                if((i-lastindex) <2 && lastindex != 0)
+                if(((i-lastindex) <2 && lastindex != 0) || i== 0)
                 {//检测到两个相邻的标致
                     lastindex = i;
                 }else
@@ -179,7 +181,7 @@ std::vector<MyString> MyString::splits(const MyString &ftm)
                 {
                     if(deep == 0)           //如果现在检测到成对的第一个字符且深度为零,清空前面的字符作为一个整体
                     {
-                        if((i-lastindex) <2 && lastindex != 0)
+                        if(((i-lastindex) <2 && lastindex != 0) || i== 0)
                         {//检测到两个相邻的标致
                             lastindex = i;
                         }else
@@ -196,7 +198,7 @@ std::vector<MyString> MyString::splits(const MyString &ftm)
                     deep--;
                     if(deep == 0)
                     {
-                        if((i-lastindex) <2 && lastindex != 0)
+                        if(((i-lastindex) <2 && lastindex != 0) || i== 0)
                         {//检测到两个相邻的标致
                             lastindex = i;
                         }else
@@ -209,7 +211,7 @@ std::vector<MyString> MyString::splits(const MyString &ftm)
 
                 }else if(deep == 0)
                 {
-                    if((i-lastindex) <2 && lastindex != 0)
+                    if(((i-lastindex) <2 && lastindex != 0) || i== 0)
                     {//检测到两个相邻的标致
                         lastindex = i;
                     }else

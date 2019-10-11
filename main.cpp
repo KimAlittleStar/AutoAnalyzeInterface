@@ -16,7 +16,10 @@ int main(int argn,char * args[])
     {
 
         std::cout<< "please input your file"<<std::endl;
-        std::cin>>interfaceFilePath;
+//        std::cin>>interfaceFilePath;
+//        interfaceFilePath = "D:/kim_a/Documents/Qt_Pro/AutoAnalyzeInterface/Interface.txt";
+        interfaceFilePath = "../AutoAnalyzeInterface/Interface.txt";
+
     }
     AnalyzeFile af(interfaceFilePath);
     char* indexOfdir = strrchr(interfaceFilePath.data(),'\\');

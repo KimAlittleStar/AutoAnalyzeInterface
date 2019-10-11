@@ -9,4 +9,5 @@
 *.pro.user
 !*.pro
 *PRE1
+/**/settings.json
 
