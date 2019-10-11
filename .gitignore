@@ -1,0 +1,10 @@
+*.[oda]
+~**
+!/**/*.c
+!/**/*.h
+!*.c
+!*.h
+!.gitignore
+!makefile
+*.pro.user
+!*.pro
