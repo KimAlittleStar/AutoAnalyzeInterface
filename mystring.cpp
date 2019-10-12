@@ -156,7 +156,7 @@ std::vector<MyString> MyString::splits(const MyString &ftm) const
         smartmode = 1;
     std::vector<MyString> ret;
     ret.clear();
-    size_t lastindex = 0 ;
+    size_t lastindex = std::string::npos ;
     size_t flag = 0;
     MyString temp;
     int deep = 0;
@@ -166,12 +166,12 @@ std::vector<MyString> MyString::splits(const MyString &ftm) const
         {
             if(smartmode == 0)
             {//没有配对出现的标志
-                if(((i-lastindex) <2 && lastindex != 0) || i== 0)
+                if(((i-lastindex) <2 ) || i== 0)
                 {//检测到两个相邻的标致
                     lastindex = i;
                 }else
                 {
-                    temp = substr(lastindex+(!!lastindex),i-lastindex-(!!lastindex));
+                    temp = substr(lastindex+1,i-lastindex-1);
                     ret.push_back(temp);
                     lastindex = i;
                 }
@@ -181,12 +181,12 @@ std::vector<MyString> MyString::splits(const MyString &ftm) const
                 {
                     if(deep == 0)           //如果现在检测到成对的第一个字符且深度为零,清空前面的字符作为一个整体
                     {
-                        if(((i-lastindex) <2 && lastindex != 0) || i== 0)
+                        if(((i-lastindex) <2) || i== 0)
                         {//检测到两个相邻的标致
                             lastindex = i;
                         }else
                         {
-                            temp = substr(lastindex+(!!lastindex),i-lastindex-(!!lastindex));
+                            temp = substr(lastindex+1,i-lastindex-1);
                             ret.push_back(temp);
                             lastindex = i;
                         }
@@ -198,12 +198,12 @@ std::vector<MyString> MyString::splits(const MyString &ftm) const
                     deep--;
                     if(deep == 0)
                     {
-                        if(((i-lastindex) <2 && lastindex != 0) || i== 0)
+                        if(((i-lastindex) <2) || i== 0)
                         {//检测到两个相邻的标致
                             lastindex = i;
                         }else
                         {
-                            temp = substr(lastindex+(!!lastindex),i-lastindex-(!!lastindex));
+                            temp = substr(lastindex+1,i-lastindex-1);
                             ret.push_back(temp);
                             lastindex = i;
                         }
@@ -211,12 +211,12 @@ std::vector<MyString> MyString::splits(const MyString &ftm) const
 
                 }else if(deep == 0)
                 {
-                    if(((i-lastindex) <2 && lastindex != 0) || i== 0)
+                    if(((i-lastindex) <2) || i== 0)
                     {//检测到两个相邻的标致
                         lastindex = i;
                     }else
                     {
-                        temp = substr(lastindex+(!!lastindex),i-lastindex-(!!lastindex));
+                        temp = substr(lastindex+1,i-lastindex-1);
                         ret.push_back(temp);
                         lastindex = i;
                     }
@@ -226,7 +226,7 @@ std::vector<MyString> MyString::splits(const MyString &ftm) const
     }
     if((size()-lastindex) > 2)
     {
-        temp = substr(lastindex+(!!lastindex),size()-lastindex-(!!lastindex));
+        temp = substr(lastindex+1,size()-lastindex-1);
         ret.push_back(temp);
     }
     return ret;

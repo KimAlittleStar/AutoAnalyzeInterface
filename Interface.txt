@@ -15,17 +15,17 @@ Ping = 0010
 {
 	Send = 
 	{
-		u8 data1;	//---data1 comment 
-		u8 data2;
-		Sutdent 	//-studentcomment-
+		u8 data1;	//---data1 		comment 
+		u8* data2;
+		Sutdent 	
 		{
-			u8 id;	//idcomment
-			u16 name;
+			u8[] id;	//id	comment
+			u16 * name;
 		} bob;
 	}
 	Return = 
 	{
-		u32 errCode;
+		u32 [] errCode;
 	}
 }
 

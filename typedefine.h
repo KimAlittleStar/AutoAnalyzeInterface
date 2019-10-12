@@ -4,20 +4,6 @@
 #include<vector>
 #include<string>
 #include "mystring.h"
-const static char* typeConvert[][3] =       // typestr,Cstr,JavaStr
-{
-    {"u8 "   ,   "unsigned char "  ,  "unsigned char "     },
-    {"u16 "  ,   "unsigned short " ,  "unsigned shor t"    },
-    {"u32 "  ,   "unsigned int "   ,  "unsigned int "      },
-    {"s8 "   ,   "unsigned char "  ,  "signed char "       },
-    {"s16 "  ,   "unsigned char "  ,  "signed short "      },
-    {"s32 "  ,   "unsigned char "  ,  "signed int "        },
-    {"u8 "   ,   "unsigned char "  ,  "unsigned long long "},
-    {"u64 "  ,   "unsigned char "  ,  "unsigned char "     },
-    {"bool " ,   "Boolean "        ,  "bool "              },
-    {"string ",  "char * "         ,  "String "            },
-    {"f32 ",     "float "          ,  "float "             }
-};
 
 typedef enum
 {
@@ -42,15 +28,31 @@ typedef enum
     TYPE_string =   18,
     TYPE_other =    19,
     TYPE_others =   20,
-    TYPE_comment =  21
+    TYPE_comment =  21,
+    TYPE_Err  = 22
 } TYPE_e;
+
+const static char* typeConvert[][4] =       // typestr,Cstr,JavaStr
+{
+    {"u8"   ,   "unsigned char "        ,  "unsigned char "     ,reinterpret_cast<const char*>(TYPE_u8)},
+    {"s8"   ,   "unsigned char "        ,  "signed char "       ,reinterpret_cast<const char*>(TYPE_s8)},
+    {"u16"  ,   "unsigned short "       ,  "unsigned shor t"    ,reinterpret_cast<const char*>(TYPE_u16)},
+    {"s16"  ,   "unsigned char "        ,  "signed short "      ,reinterpret_cast<const char*>(TYPE_s16)},
+    {"u32"  ,   "unsigned int "         ,  "unsigned int "      ,reinterpret_cast<const char*>(TYPE_u32)},
+    {"s32"  ,   "unsigned char "        ,  "signed int "        ,reinterpret_cast<const char*>(TYPE_s32)},
+    {"u64"   ,  "unsigned long long "   ,  "unsigned long long ",reinterpret_cast<const char*>(TYPE_u64)},
+    {"bool" ,   "Boolean "              ,  "bool "              ,reinterpret_cast<const char*>(TYPE_bool)},
+    {"f32",     "float "                ,  "float "             ,reinterpret_cast<const char*>(TYPE_f32)},
+    {"string",  "char * "               ,  "String "            ,reinterpret_cast<const char*>(TYPE_string)}
+};
+
 
 typedef struct
 {
-    std::string typebase;
-    std::string type_name;
-    std::string comment;
-    unsigned char isArray;
+    std::string typebase;           ///< 基础变量名
+    std::string type_name;          ///< 生成文档中的变量名
+    std::string comment;            ///< 注释
+    unsigned int isArray = 0;          ///< 是否是指针
 } TypeElement;
 
 class TypeDefine
@@ -74,6 +76,7 @@ private:
     std::vector<TypeDefine> subType;
     MyString tpName;
     MyString varName;
+    bool isArray = false;
     const std::string getTypeBaseStr_Cfamily(const std::string& base);
     const std::string getTypeBaseStr_Java(const std::string & base);
     TYPE_e judgeType(const MyString& str) const;

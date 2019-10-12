@@ -17,7 +17,12 @@ bool Interface::fillInterface(std::string str)
         str.erase(star, end - star + 2);
     }
     MyString ss = str;
-    ss.removeAll("\t");
+    ss.replace("\t"," ");
+    while(ss.replace("  "," ") != -1)
+    {
+
+    }
+    ss.replace("\n ","\n");
     //    std::cout<<"str = \n\n"<<ss<<"\n\n";
 
     //    std::vector<MyString> buff = ss.splits("{=}");
@@ -34,7 +39,7 @@ bool Interface::fillInterface(std::string str)
 
     end = 0;
     star = 0;
-    std::vector<MyString> buff = ss.splits("{=}");
+    std::vector<MyString> buff = ss.splits("{=\n }");
     if (buff.size() != 3)
         return false;
     buff[0].removeAll(" ");
