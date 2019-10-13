@@ -40,11 +40,51 @@ bool AnalyzeFile::setInputfile(const MyString & inputfilePath)
 bool AnalyzeFile::outputC_file(MyString path )
 {
     std::cout<<"filepath :"<<path<<"XXX.c"<<std::endl;
+    path.append("protocol.c");
+    MyString text = "#include \"protocol.h\"\n";
+
+    for(size_t i = 0;i<interfaceLib.size();i++)
+    {
+        text.append(interfaceLib[i].getStrToC_file());
+    }
+
+
+    std::ofstream out(path);
+    if(out.is_open())
+    {
+        out<<text<<std::endl;
+    }else {
+        return  false;
+    }
+    out.close();
     return true;
 }
 bool AnalyzeFile::outputH_file(MyString path)
 {
-    std::cout<<"filepath :"<<path<<"XXX.h"<<std::endl;
+    std::cout<<"filepath :"<<path<<"protocol.h"<<std::endl;
+    path.append("protocol.h");
+    MyString text = "#ifndef _PROTOCOL_H_ \n#define _PROTOCOL_H_\n\n";
+    text.append("typedef enum \n{\n\tTRUE = 1,\n\tFALSE = !TRUE\n} Boolean;\n\n");
+    text.append("///------------------需要实现的几个功能函数---------------//\n");
+    text.append("extern void* PTC_malloc(unsigned long long size);\n");
+    text.append("extern void PTC_free(void* f);\n");
+    text.append("extern void PTC_memset(void* des,int v,unsigned long long len);\n");
+    text.append("extern void* PTC_memcpy(void* des,void* src,unsigned long long len);\n\n\n");
+
+    for(size_t i = 0;i<interfaceLib.size();i++)
+    {
+        text.append(interfaceLib[i].getStrToH_file());
+    }
+    text.append("\n\n#endif\n\n");
+    std::cout << "out of H file :"<<text<<std::endl;
+    std::ofstream out(path);
+    if(out.is_open())
+    {
+        out<<text<<std::endl;
+    }else {
+        return  false;
+    }
+    out.close();
     return true;
 }
 bool AnalyzeFile::outputCPP_file(MyString path )
@@ -81,9 +121,10 @@ int AnalyzeFile::pushTo_interfaceLib(std::ifstream* f)
     std::stringstream bf;
     bf << f->rdbuf();
     text = bf.str();
-    std::cout<< "text content:"<<text<<std::endl;
-
+    text.append("\0");
     std::vector<MyString> * facelist = getInterfaceList(text);
+    std::cout<<"list size = "<<facelist->size()<< "text content:"<<text<<"\n "<<std::endl;
+
     for(std::size_t i = 0;i<facelist->size();i++)
     {
         Interface *iface = new Interface();

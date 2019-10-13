@@ -19,10 +19,15 @@ bool TypeDefine::fillTypedef(const MyString *str)
         bufftype = judgeType(buff[i]);
         if(bufftype == TYPE_comment && i != 0)
         {
-            ele.back().comment = buff[i];
+            subType.back().comment = buff[i];
         }else if(bufftype == TYPE_other || bufftype == TYPE_others)
         {
             TypeDefine sub;
+            sub.setTypeENum(bufftype);
+            buff[i].removeAll("[");
+            buff[i].removeAll("]");
+            buff[i].removeAll("*");
+            buff[i].removeAll(" ");
             sub.setTypeName(buff[i]);
             sub.setVarName(buff[i+2]);
             sub.fillTypedef(&buff[i+1]);
@@ -33,20 +38,21 @@ bool TypeDefine::fillTypedef(const MyString *str)
         }else if(bufftype == TYPE_Err)
             return  false;
         else {
-            TypeElement newele;
-            newele.typebase = typeConvert[bufftype>>1][0];
+            TypeDefine newele;
+            newele.setTypeName( typeConvert[bufftype>>1][0]);
             std::vector<MyString> b = buff[i].splits(" ");
-            newele.type_name = b.back();
+            newele.setTypeENum(bufftype);
+            newele.setVarName(b.back());
             if((bufftype&0x01) == 1 || bufftype == TYPE_string)
-                newele.isArray = 1;
-            ele.push_back(newele);
+                newele.setArrayType(true);
+            subType.push_back(newele);
         }
     }
 
-    for(size_t i = 0;i<ele.size();i++)
+    for(size_t i = 0;i<subType.size();i++)
     {
-        std::cout<< tpName <<": ele ["<<i<<"] = base:"<<ele[i].typebase<<"; name:"<<
-                    ele[i].type_name<<"; comm:"<<ele[i].comment<<"; Array:"<<ele[i].isArray<<"\n";
+        std::cout<< tpName <<": subType ["<<i<<"] = base:"<<subType[i].getTypeName()<<"; name:"<<
+                    subType[i].getVarName()<<"; comm:"<<subType[i].getComment()<<"; Array:"<<subType[i].getArrayType()<<"\n";
     }
 
     return true;
@@ -96,4 +102,119 @@ TYPE_e TypeDefine::judgeType(const MyString& str) const
         ret = TYPE_Err;
     }
     return ret;
+}
+
+const MyString TypeDefine::getStrToC_file(void)
+{
+    MyString ret;
+    for(size_t i = 0;i<subType.size();i++)
+    {
+        if(subType[i].getTypeENum() == TYPE_other || subType[i].getTypeENum() == TYPE_others)
+        {
+            ret.append(subType[i].getStrToC_file());
+        }
+    }
+    ret.append(getNewfunctionStr());
+    ret.append(getDeletefunctionStr());
+    ret.append(getTodatafunctionStr());
+    ret.append(getFillfunctionStr());
+
+
+    return  ret;
+}
+const MyString TypeDefine::getStrToH_file(void)
+{
+    MyString ret;
+    for(size_t i = 0;i<subType.size();i++)
+    {
+        if(subType[i].getTypeENum() == TYPE_other || subType[i].getTypeENum() == TYPE_others)
+        {
+            ret.append(subType[i].getStrToH_file());
+        }
+    }
+    ret.append("\ntypedef struct \n{\n");
+    for(size_t i = 0;i<subType.size();i++)
+    {
+        if(subType[i].getArrayType() == true)
+           ret.append("\tunsigned int "+subType[i].getVarName()+"_lengh ;\n");
+        ret.append("\t"+subType[i].getTypeName_Cfamily()+" ");
+        if(subType[i].getArrayType() == true)
+           ret.append("* ");
+        ret.append(subType[i].getVarName()+";"+subType[i].getComment()+"\n");
+    }
+//    if(typeNum == TYPE_SendRet)
+//    {
+//        ret.append("\tvoid (*delete)(PTC_"+tpName+"_t* t);    ///< delete this typestruct\n");
+//        ret.append("\tunsigned char* (*todata)(PTC_"+tpName+"_t* t,unsigned int* len);    ///< todata this typestruct\n");
+//        ret.append("\tPTC_"+tpName+"_t* (*fill)(PTC_"+tpName+"_t* t,unsigned char* data,unsigned int len);    ///< delete this typestruct\n");
+//    }
+    ret.append("\n} PTC_"+tpName+"_t ;"+comment+"\n");
+    if(typeNum == TYPE_others || typeNum == TYPE_SendRet)
+    {
+        ret.append("\n\n"+getTypeName_Cfamily()+" * PTC_new"+tpName+"(void);\n");
+        ret.append("void PTC_delete"+tpName+"("+getTypeName_Cfamily()+" * m);\n\n");
+        ret.append("unsigned char* PTC_todata"+tpName+"("+
+                   getTypeName_Cfamily()+"* t,unsigned int * len);\n");
+        ret.append("PTC_"+tpName+"_t* PTC_fill"+tpName+"("+
+                   getTypeName_Cfamily()+"* t,unsigned char * data,unsigned int len);\n");
+    }
+
+    return ret;
+}
+
+const MyString TypeDefine::getTypeName_Cfamily()
+{
+    MyString ret;
+    if(typeNum == TYPE_Err)
+        return ret;
+    else if (typeNum == TYPE_other || typeNum == TYPE_others||
+             typeNum == TYPE_SendRet) {
+        ret = "PTC_"+tpName+"_t ";
+    }
+    else{
+        ret = typeConvert[typeNum>>1][1];
+    }
+    return  ret;
+}
+
+const MyString TypeDefine::getNewfunctionStr()
+{
+    MyString ret;
+    if(typeNum == TYPE_SendRet || typeNum == TYPE_others)
+    {
+        ret.append(getTypeName_Cfamily()+" * PTC_new"+tpName+"() \n{");
+        ret.append("\t"+getTypeName_Cfamily()+"* ret = NULL;\n");
+        ret.append("\t ret = PCT_malloc(sizeof("+getTypeName_Cfamily()+"));\n");
+        ret.append("\t PCT_memset(ret,0,sizeof("+getTypeName_Cfamily()+"));\n");
+        ret.append("\t return ret;\n");
+        ret.append("\n}");
+    }
+    return  ret;
+}
+const MyString TypeDefine::getDeletefunctionStr()
+{
+    MyString ret;
+    if(typeNum == TYPE_SendRet || typeNum == TYPE_others)
+    {
+
+    }
+    return  ret;
+}
+const MyString TypeDefine::getTodatafunctionStr()
+{
+    MyString ret;
+    if(typeNum == TYPE_SendRet || typeNum == TYPE_others)
+    {
+
+    }
+    return  ret;
+}
+const MyString TypeDefine::getFillfunctionStr()
+{
+    MyString ret;
+    if(typeNum == TYPE_SendRet || typeNum == TYPE_others)
+    {
+
+    }
+    return  ret;
 }

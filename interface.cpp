@@ -9,6 +9,7 @@ Interface::Interface()
 
 bool Interface::fillInterface(std::string str)
 {
+    std::cout<<"fillInterface"<<std::endl;
     size_t star = str.find("/*");
     size_t end = str.find("*/");
     if (star != end)
@@ -58,14 +59,33 @@ bool Interface::fillInterface(std::string str)
         return false;
     if(buff[0].find("Send") != std::string::npos)
     {
-        sendType.setTypeName(buff[0]);
+        MyString tname = interfaceName;
+        sendType.setTypeName(tname.append("_"+ buff[0]));
+        sendType.setTypeENum(TYPE_SendRet);
         sendType.fillTypedef(&buff[1]);
     }
     if(buff[2].find("Return") != std::string::npos)
     {
-        retType.setTypeName(buff[2]);
+        MyString tname = interfaceName;
+        retType.setTypeName(tname.append("_"+ buff[2]));
+        retType.setTypeENum(TYPE_SendRet);
         retType.fillTypedef(&buff[3]);
     }
     std::cout << "interface NAME =" << interfaceName << "ID = " << interfaceID << "\n**\n";
     return true;
+}
+
+
+const MyString Interface::getStrToC_file(void)
+{
+    MyString ret = sendType.getStrToC_file();
+    ret.append(retType.getStrToC_file());
+    return ret;
+}
+const MyString Interface::getStrToH_file(void)
+{
+    MyString ret = sendType.getStrToH_file();
+    ret.append(retType.getStrToH_file());
+
+    return ret;
 }

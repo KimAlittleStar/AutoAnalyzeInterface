@@ -17,7 +17,7 @@ Ping = 0010
 	{
 		u8 data1;	//---data1 		comment 
 		u8* data2;
-		Sutdent 	
+		Sut 	
 		{
 			u8[] id;	//id	comment
 			u16 * name;
@@ -36,7 +36,7 @@ Pings = 0x000F
 	{
 		u8 data1;
 		u8 data2;
-		Sutdent 
+		Sutd
 		{
 			u8 id;
 			u16 name;
@@ -53,7 +53,7 @@ Pi = 0x0054
 	Send = 
 	{
 		u8 data1; u8 data2;
-		Sutdent {
+		Sutde {
 			u8 id; //ids
 			u16 name;
 		} bob;	//bobtype
@@ -62,3 +62,31 @@ Pi = 0x0054
 		u32 errCode;
 	}
 }
+
+class = 0x1314
+{
+	Send = 
+	{
+		Student []
+		{
+			u32 id;			//学号
+			u8 age;			//年龄
+			bool isman;		//性别 0->女 1->男
+
+		} stus;		//学生组成的数组 = 和;
+		Teacher
+		{
+			string name;
+			u32 teacherid;
+			string subject;
+		} tea;		//带班班主任
+	}
+
+	Return = 
+	{
+		u32 recCnt;
+	}
+}
+
+
+

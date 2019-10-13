@@ -10,4 +10,5 @@
 !*.pro
 *PRE1
 /**/settings.json
+protocol.*
 

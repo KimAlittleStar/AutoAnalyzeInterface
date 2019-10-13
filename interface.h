@@ -10,8 +10,8 @@ public:
 
     bool fillInterface(std::string str);
 
-    const std::string getStrToC_file(void);
-    const std::string getStrToH_file(void);
+    const MyString getStrToC_file(void);
+    const MyString getStrToH_file(void);
     const std::string getStrToCPP_file(void);
     const std::string getStrToHPP_file(void);
     const std::string getStrToJAVA_file(void);

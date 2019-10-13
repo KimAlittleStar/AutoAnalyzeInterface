@@ -29,7 +29,8 @@ typedef enum
     TYPE_other =    19,
     TYPE_others =   20,
     TYPE_comment =  21,
-    TYPE_Err  = 22
+    TYPE_Err  =     22,
+    TYPE_SendRet =  23
 } TYPE_e;
 
 const static char* typeConvert[][4] =       // typestr,Cstr,JavaStr
@@ -43,7 +44,7 @@ const static char* typeConvert[][4] =       // typestr,Cstr,JavaStr
     {"u64"   ,  "unsigned long long "   ,  "unsigned long long ",reinterpret_cast<const char*>(TYPE_u64)},
     {"bool" ,   "Boolean "              ,  "bool "              ,reinterpret_cast<const char*>(TYPE_bool)},
     {"f32",     "float "                ,  "float "             ,reinterpret_cast<const char*>(TYPE_f32)},
-    {"string",  "char * "               ,  "String "            ,reinterpret_cast<const char*>(TYPE_string)}
+    {"string",  "char "               ,  "String "            ,reinterpret_cast<const char*>(TYPE_string)}
 };
 
 
@@ -59,27 +60,47 @@ class TypeDefine
 {
 public:
     TypeDefine();
-    const std::string getStrToC_file(void);
-    const std::string getStrToH_file(void);
-    const std::string getStrToCPP_file(void);
-    const std::string getStrToHPP_file(void);
-    const std::string getStrToJAVA_file(void);
+    const MyString getStrToC_file(void);
+    const MyString getStrToH_file(void);
+    const MyString getStrToCPP_file(void);
+    const MyString getStrToHPP_file(void);
+    const MyString getStrToJAVA_file(void);
 
     bool fillTypedef(const MyString* str);
     const MyString& getTypeName()   const {return tpName;}
     void setTypeName(const MyString& name) {tpName=name; }
     const MyString& getVarName() const {return varName;}
     void setVarName(const MyString& name) {varName = name;}
+
+    void setComment(const MyString& cmt) {comment = cmt;}
+    const MyString& getComment(void)   const {return comment;}
+
+    void setArrayType(const bool b) {isArray = b;}
+    bool getArrayType(void) const   {return isArray;}
+
+    void setTypeENum(TYPE_e t)  {typeNum = t;}
+    TYPE_e getTypeENum(void)  const  {return typeNum;}
+
 private:
 
-    std::vector<TypeElement> ele;
+//    std::vector<TypeElement> ele;
     std::vector<TypeDefine> subType;
     MyString tpName;
     MyString varName;
     bool isArray = false;
-    const std::string getTypeBaseStr_Cfamily(const std::string& base);
-    const std::string getTypeBaseStr_Java(const std::string & base);
+    MyString comment;
+    TYPE_e typeNum;
+//    const std::string getTypeBaseStr_Cfamily(const std::string& base);
+//    const std::string getTypeBaseStr_Java(const std::string & base);
+
+    const MyString getTypeName_Cfamily();
     TYPE_e judgeType(const MyString& str) const;
+
+    const MyString getNewfunctionStr();
+    const MyString getDeletefunctionStr();
+    const MyString getTodatafunctionStr();
+    const MyString getFillfunctionStr();
+
 };
 
 #endif // TYPEDEFINE_H
