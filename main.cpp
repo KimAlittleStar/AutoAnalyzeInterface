@@ -7,7 +7,9 @@ using namespace std;
 int main(int argn,char * args[])
 {
     cout << "Hello World!" << endl;
-    MyString interfaceFilePath;
+    MyString interfaceFilePath = "u8 x";
+    std::vector<MyString> buff = interfaceFilePath.splits(" ");
+    std::cout<<buff.size();
     if(argn == 2)
     {
         interfaceFilePath = args[1];

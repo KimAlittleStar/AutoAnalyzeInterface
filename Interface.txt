@@ -35,11 +35,16 @@ Pings = 0x000F
 	Send = 
 	{
 		u8 data1;
-		u8 data2;
-		Sutd
+		u8[] data2;
+		TestClass
 		{
 			u8 id;
-			u16 name;
+			u16* name;
+			Point
+			{
+				u8 x;
+				u8 y;
+			} p;
 		} bob;
 	}
 	Return = 
@@ -56,6 +61,7 @@ Pi = 0x0054
 		Sutde {
 			u8 id; //ids
 			u16 name;
+			u8 * grands;		//学生的成绩
 		} bob;	//bobtype
 	}
 	Return={
@@ -72,6 +78,12 @@ class = 0x1314
 			u32 id;			//学号
 			u8 age;			//年龄
 			bool isman;		//性别 0->女 1->男
+			Bubue 
+			{
+				u8 title;
+				u16 pointx;
+				u16 pointy;
+			} bee;
 
 		} stus;		//学生组成的数组 = 和;
 		Teacher

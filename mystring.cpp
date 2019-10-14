@@ -224,7 +224,7 @@ std::vector<MyString> MyString::splits(const MyString &ftm) const
             }
         }
     }
-    if((size()-lastindex) > 2)
+    if((size()-lastindex) > 1)
     {
         temp = substr(lastindex+1,size()-lastindex-1);
         ret.push_back(temp);

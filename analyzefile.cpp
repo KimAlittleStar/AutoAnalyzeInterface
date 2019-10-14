@@ -1,22 +1,21 @@
 #include "analyzefile.h"
-#include <iostream>
-#include <string>
-#include <sstream>
 #include "mystring.h"
+#include <iostream>
+#include <sstream>
+#include <string>
 AnalyzeFile::AnalyzeFile()
 {
     MyString a = "1234567";
-    std::cout<<a<<std::endl;
-    a.replace("1","qq");
-    std::cout<<a<<std::endl;
-
+    std::cout << a << std::endl;
+    a.replace("1", "qq");
+    std::cout << a << std::endl;
 }
 AnalyzeFile::~AnalyzeFile()
 {
-    if(inputfile != nullptr)
+    if (inputfile != nullptr)
         delete inputfile;
 }
-AnalyzeFile::AnalyzeFile(char* inputfilePath)
+AnalyzeFile::AnalyzeFile(char *inputfilePath)
 {
     setInputfile(inputfilePath);
 }
@@ -24,83 +23,145 @@ AnalyzeFile::AnalyzeFile(std::string inputfilePath)
 {
     setInputfile(inputfilePath.data());
 }
-bool AnalyzeFile::setInputfile(const MyString & inputfilePath)
+bool AnalyzeFile::setInputfile(const MyString &inputfilePath)
 {
-    if(inputfile == nullptr)
-        inputfile = new std::ifstream(inputfilePath,std::ios::in );
+    if (inputfile == nullptr)
+        inputfile = new std::ifstream(inputfilePath, std::ios::in);
     else
     {
         inputfile->close();
-        inputfile->open(inputfilePath,std::ios::in );
+        inputfile->open(inputfilePath, std::ios::in);
     }
     pushTo_interfaceLib(inputfile);
     return true;
 }
 
-bool AnalyzeFile::outputC_file(MyString path )
+bool AnalyzeFile::outputC_file(MyString path)
 {
-    std::cout<<"filepath :"<<path<<"XXX.c"<<std::endl;
+    std::cout << "filepath :" << path << "XXX.c" << std::endl;
     path.append("protocol.c");
     MyString text = "#include \"protocol.h\"\n";
-
-    for(size_t i = 0;i<interfaceLib.size();i++)
+    text.append("PTC_DECLARE_WRITE(u32,unsigned int)\n");
+    text.append("PTC_DECLARE_WRITE(s32, int)\n");
+    text.append("PTC_DECLARE_WRITE(u16, unsigned short )\n");
+    text.append("PTC_DECLARE_WRITE(s16, short)\n");
+    text.append("PTC_DECLARE_WRITE(u8, unsigned char )\n");
+    text.append("PTC_DECLARE_WRITE(s8, char)\n");
+    text.append("PTC_DECLARE_WRITE(u64, unsigned long long )\n");
+    text.append("PTC_DECLARE_WRITE(bool, Boolean)\n");
+    text.append("PTC_DECLARE_WRITE(f32, float)\n\n\n");
+    for (size_t i = 0; i < interfaceLib.size(); i++)
     {
         text.append(interfaceLib[i].getStrToC_file());
     }
 
-
     std::ofstream out(path);
-    if(out.is_open())
+    if (out.is_open())
     {
-        out<<text<<std::endl;
-    }else {
-        return  false;
+        out << text << std::endl;
+    }
+    else
+    {
+        return false;
     }
     out.close();
     return true;
 }
 bool AnalyzeFile::outputH_file(MyString path)
 {
-    std::cout<<"filepath :"<<path<<"protocol.h"<<std::endl;
+    std::cout << "filepath :" << path << "protocol.h" << std::endl;
     path.append("protocol.h");
     MyString text = "#ifndef _PROTOCOL_H_ \n#define _PROTOCOL_H_\n\n";
+    text.append("#ifndef NULL\n#ifdef __cplusplus\n#ifndef _WIN64\n"
+                "#define NULL 0\n#else\n#define NULL 0LL\n#endif  /* W64 */\n#else\n"
+                "#define NULL ((void *)0)\n#endif\n#endif\n\n");
     text.append("typedef enum \n{\n\tTRUE = 1,\n\tFALSE = !TRUE\n} Boolean;\n\n");
     text.append("///------------------需要实现的几个功能函数---------------//\n");
     text.append("extern void* PTC_malloc(unsigned long long size);\n");
     text.append("extern void PTC_free(void* f);\n");
     text.append("extern void PTC_memset(void* des,int v,unsigned long long len);\n");
     text.append("extern void* PTC_memcpy(void* des,void* src,unsigned long long len);\n\n\n");
+    text.append("#define PTC_DECLARE_WRITE(T, TureT)                           \\\n");
+    text.append("    inline void PTC_write##T(unsigned char *des, ##TureT val) \\\n");
+    text.append("    {                                                         \\\n");
+    text.append("        union {                                               \\\n");
+    text.append("            unsigned char ch[sizeof(val)];                    \\\n");
+    text.append("            ##TureT v;                                        \\\n");
+    text.append("        } un;                                                 \\\n");
+    text.append("        un.v = val;                                           \\\n");
+    text.append("        PTC_memcpy(des, &un, sizeof(un));                     \\\n");
+    text.append("    } //The code bloats out how to write individual elements;\n");
+    text.append("#define PTC_DECLARE_READ(T, TureT)                \\\n");
+    text.append("    inline##TureT PTC_read##T(unsigned char *src) \\\n");
+    text.append("    {                                             \\\n");
+    text.append("        union {                                   \\\n");
+    text.append("            unsigned char ch[sizeof(##TureT)];    \\\n");
+    text.append("            ##TureT v;                            \\\n");
+    text.append("        } un;                                     \\\n");
+    text.append("        PTC_memcpy(un.ch, src, sizeof(un));       \\\n");
+    text.append("        return un.v;                              \\\n");
+    text.append("    } //Code bloat, the way individual elements are read at the bloat;\n");
 
-    for(size_t i = 0;i<interfaceLib.size();i++)
+    text.append("#define PTC_DECLARE_TODATA(T)                                            \\\n");
+    text.append("    inline unsigned char *PTC_todata##T(PTC_##T##_t *t, unsigned int *len) \\\n");
+    text.append("    {                                                                    \\\n");
+    text.append("        unsigned char *ret = NULL;                                       \\\n");
+    text.append("        union {                                                          \\\n");
+    text.append("            unsigned char ch[sizeof(*t)];                                \\\n");
+    text.append("            PTC_##T##_t v;                                                 \\\n");
+    text.append("        } un;                                                            \\\n");
+    text.append("        un.v = *t;                                                       \\\n");
+    text.append("        ret = PTC_malloc(sizef(un));                                     \\\n");
+    text.append("        PTC_memcpy(ret, un.ch, sizeof(un));                              \\\n");
+    text.append("        return ret;                                                      \\\n");
+    text.append("    }\n\n");
+
+    text.append("#define PTC_DECLARE_FILL(T)                                                            \\\n");
+    text.append("    inline PTC_##T##_t *PTC_fill##T(PTC_##T##_t *t, unsigned char *data, unsigned int len) \\\n");
+    text.append("    {                                                                                  \\\n");
+    text.append("        PTC_##T_t *ret = t;                                                            \\\n");
+    text.append("        union {                                                                        \\\n");
+    text.append("            unsigned char ch[sizeof(*t)];                                              \\\n");
+    text.append("            PTC_##T##_t v;                                                               \\\n");
+    text.append("        } un;                                                                          \\\n");
+    text.append("        PTC_memcpy(un.ch, data, sizeof(un));                                           \\\n");
+    text.append("        if (ret == NULL)                                                               \\\n");
+    text.append("            ret = PTC_malloc(sizeof(un));                                              \\\n");
+    text.append("        *ret = un.v;                                                                   \\\n");
+    text.append("        return ret;                                                                    \\\n");
+    text.append("    }\n\n");
+
+    for (size_t i = 0; i < interfaceLib.size(); i++)
     {
         text.append(interfaceLib[i].getStrToH_file());
     }
     text.append("\n\n#endif\n\n");
-    std::cout << "out of H file :"<<text<<std::endl;
+    std::cout << "out of H file :" << text << std::endl;
     std::ofstream out(path);
-    if(out.is_open())
+    if (out.is_open())
     {
-        out<<text<<std::endl;
-    }else {
-        return  false;
+        out << text << std::endl;
+    }
+    else
+    {
+        return false;
     }
     out.close();
     return true;
 }
-bool AnalyzeFile::outputCPP_file(MyString path )
+bool AnalyzeFile::outputCPP_file(MyString path)
 {
     return true;
 }
 
-bool AnalyzeFile::outputHPP_file(MyString path )
+bool AnalyzeFile::outputHPP_file(MyString path)
 {
     return true;
 }
-bool AnalyzeFile::outputJava_file(MyString path  )
+bool AnalyzeFile::outputJava_file(MyString path)
 {
     return true;
 }
-
 
 /**
  ***********************************************************************************************
@@ -115,17 +176,17 @@ bool AnalyzeFile::outputJava_file(MyString path  )
  * @note mark your ideal
  **********************************************************************************************
  */
-int AnalyzeFile::pushTo_interfaceLib(std::ifstream* f)
+int AnalyzeFile::pushTo_interfaceLib(std::ifstream *f)
 {
     MyString text;
     std::stringstream bf;
     bf << f->rdbuf();
     text = bf.str();
     text.append("\0");
-    std::vector<MyString> * facelist = getInterfaceList(text);
-    std::cout<<"list size = "<<facelist->size()<< "text content:"<<text<<"\n "<<std::endl;
+    std::vector<MyString> *facelist = getInterfaceList(text);
+    std::cout << "list size = " << facelist->size() << "text content:" << text << "\n " << std::endl;
 
-    for(std::size_t i = 0;i<facelist->size();i++)
+    for (std::size_t i = 0; i < facelist->size(); i++)
     {
         Interface *iface = new Interface();
         iface->fillInterface(facelist->at(i));
@@ -136,50 +197,50 @@ int AnalyzeFile::pushTo_interfaceLib(std::ifstream* f)
     return static_cast<int>(facelist->size());
 }
 
-std::vector<MyString>* AnalyzeFile::getInterfaceList(const MyString& text)
+std::vector<MyString> *AnalyzeFile::getInterfaceList(const MyString &text)
 {
-    std::vector<MyString>* ret = new std::vector<MyString>();
+    std::vector<MyString> *ret = new std::vector<MyString>();
 
     size_t blockcomment_star = text.find("/*");
     size_t blockcomment_end = text.find("*/");
-    filecomment = text.mid(blockcomment_star,blockcomment_end-blockcomment_star+2);
-    std::cout<<"filecomment == "<<filecomment <<std::endl;
+    filecomment = text.mid(blockcomment_star, blockcomment_end - blockcomment_star + 2);
+    std::cout << "filecomment == " << filecomment << std::endl;
     //开始真正寻找接口字符块
 
-    size_t istar = 0,iend = 0;
+    size_t istar = 0, iend = 0;
     int bracketsDeep = 0;
     int commentDeep = 0;
-    for(size_t i = blockcomment_end;i < (text.size()-1);i++)
+    for (size_t i = blockcomment_end; i < (text.size() - 1); i++)
     {
-        if(text[i] == '/' && text[i+1] == '*' && commentDeep == 0)
+        if (text[i] == '/' && text[i + 1] == '*' && commentDeep == 0)
         {
             commentDeep = 1;
             istar = i;
         }
-        if(text[i] == '*' && text[i+1] == '/' && commentDeep == 1)
+        if (text[i] == '*' && text[i + 1] == '/' && commentDeep == 1)
         {
             commentDeep = 0;
         }
-        if(commentDeep == 0 && ((text[i]>='A' && text[i] <= 'Z') || (text[i]>='a' && text[i] <= 'z')))
+        if (commentDeep == 0 && ((text[i] >= 'A' && text[i] <= 'Z') || (text[i] >= 'a' && text[i] <= 'z')))
         {
-            if(istar == 0)
+            if (istar == 0)
                 istar = i;
         }
-        if(text[i] == '{' && commentDeep == 0)
+        if (text[i] == '{' && commentDeep == 0)
         {
             bracketsDeep++;
-        }else if(text[i] == '}' && commentDeep == 0)
+        }
+        else if (text[i] == '}' && commentDeep == 0)
         {
             bracketsDeep--;
-            if(bracketsDeep == 0)
+            if (bracketsDeep == 0)
             {
-                iend = i+1;
-                ret->push_back(text.mid(istar,iend-istar));
+                iend = i + 1;
+                ret->push_back(text.mid(istar, iend - istar));
                 istar = 0;
                 iend = 0;
             }
         }
     }
     return ret;
-
 }
