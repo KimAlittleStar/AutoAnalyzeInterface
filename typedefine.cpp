@@ -158,7 +158,7 @@ const MyString TypeDefine::getStrToH_file(void)
     }
     if (((typeNum == TYPE_other || typeNum == TYPE_others) && judgeHasArray() == true) || typeNum == TYPE_SendRet)
     {
-        if(typeNum == TYPE_SendRet)
+        if (typeNum == TYPE_SendRet)
             ret.append("\n\n" + getTypeName_Cfamily() + " * PTC_new" + tpName + "(void);\n");
         ret.append("void PTC_delete" + tpName + "(" + getTypeName_Cfamily() + " * m);\n\n");
         ret.append("unsigned char* PTC_todata" + tpName + "(" +
@@ -250,50 +250,46 @@ const MyString TypeDefine::getTodatafunctionStr()
         {
             ret.append("unsigned char* PTC_todata" + tpName + "(" + getTypeName_Cfamily() + "* t,unsigned int * len)\n");
             ret.append("{\n");
-            ret.append("\tif(t == NULL)\t {return NULL;}");
-            ret.append("\tunsigned int lengh = 0;\n");
-            ret.append("\tunsigned char * ret = PTC_malloc(sizeof(" + getTypeName_Cfamily() + "));\n");
+            ret.append("\tif(t == NULL)\t {return NULL;}\n");
+            ret.append("\tunsigned int lengh = 0;\n\tunsigned int memlengh = sizeof(*t);\n\n");
+            ret.append("\tunsigned char * ret = PTC_malloc(sizeof(memlengh));\n\tunsigned char * pbuff = ret;");
             for (size_t i = 0; i < subType.size(); i++)
             {
                 switch (subType[i].getTypeENum())
                 { //依据不同的类型写入到内存中去;
                 case TYPE_u8:
-                    break;
-                case TYPE_u8s:
-                    break;
                 case TYPE_s8:
+                case TYPE_u8s:
+                case TYPE_u16:
+                case TYPE_s16:
+                case TYPE_u32:
+                case TYPE_s32:
+                case TYPE_u64:
+                case TYPE_f32:
+                case TYPE_bool:
+                    ret.append("    PTC_write" + subType[i].getTypeName() + "(ret + lengh, t->" + subType[i].getVarName() + ");\n");
+                    ret.append("    lengh += sizeof(t->" + subType[i].getVarName() + ");\n\n");
                     break;
                 case TYPE_s8s:
-                    break;
-                case TYPE_u16:
-                    break;
                 case TYPE_u16s:
-                    break;
-                case TYPE_s16:
-                    break;
                 case TYPE_s16s:
-                    break;
-                case TYPE_u32:
-                    break;
                 case TYPE_u32s:
-                    break;
-                case TYPE_s32:
-                    break;
                 case TYPE_s32s:
-                    break;
-                case TYPE_u64:
-                    break;
                 case TYPE_u64s:
-                    break;
-                case TYPE_f32:
-                    break;
                 case TYPE_f32s:
-                    break;
-                case TYPE_bool:
-                    break;
                 case TYPE_bools:
-                    break;
                 case TYPE_string:
+                    ret.append("    PTC_writeu32(ret + lengh,t->" + subType[i].getVarName() + "_lengh);\n");
+                    ret.append("    lengh += sizeof(t->" + subType[i].getVarName() + "_lengh);\n");
+                    ret.append("    memlengh += t->" + subType[i].getVarName() + "_lengh * (sizeof(t->" + subType[i].getVarName() + "));");
+                    ret.append("    pbuff = PTC_malloc(memlengh);\n");
+                    ret.append("    PTC_memcpy(pbuff,ret,lengh);\n");
+                    ret.append("    PTC_free(ret);\n\tret = pbuff;\n");
+                    ret.append("    for(unsigned int i;i<t->" + subType[i].getVarName() + "_lengh;i++)\n");
+                    ret.append("    {\n");
+                    ret.append("        PTC_write" + subType[i].getTypeName() + "(ret + lengh, t->" + subType[i].getVarName() + ");\n");
+                    ret.append("        lengh += sizeof(t->" + subType[i].getVarName() + ");\n\n");
+                    ret.append("    }\n");
                     break;
                 case TYPE_other:
                     break;
@@ -303,7 +299,8 @@ const MyString TypeDefine::getTodatafunctionStr()
                     break;
                 }
             }
-
+            ret.append("    (*len) += lengh;\n\n");
+            ret.append("    return ret;\n");
             ret.append("\n}\n\n");
         }
     }
