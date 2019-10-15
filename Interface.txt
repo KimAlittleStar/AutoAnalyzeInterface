@@ -1,104 +1,81 @@
 /*
-*	文件说明
-*	字符测试:1234567890./*-+
-*	字母测试abcdefghijklmnopqrstuvwxzy
-*	符号测试 `!@#$%^&*()_)+|}{":?><~`-=[]\;',./
-*
-*
-*
-*
-*
-*/
+ * This is a generic interface source file, the file will be dedicated to parse program.
+ * after parsing, will according to choose to generate different. C/h /. Java/CPP /. HPP/cs file
+ * generic interface to writing standards are as follows:
+ * note: annotation style reference c language annotation style, on this basis, two limit;
+ * Block comments are used to explain the function of the interface, and line comments are used to explain the meaning of the element.*
+ * interface ID: cannot be repeated,ID is 16 bits, decimal or hexadecimal automatic recognition, 
+ * but it is recommended to use only one base for a file;* support type: support base type 8 bit 16 bit 32 bit signed plastic, 
+ * unsigned plastic;64-bit unsigned plastic, 32-bit floating point;Bool type;You can combine arrays and custom types at will.
+ * And custom types can also be infinite nested arrays
+ * Demo:
+ * DemoInterface = 0x0001
+ * {
+ * 		Send = 
+ * 		{
+ * 			u8 ele_m1;						//comment of ele_m1
+ * 			u8 * m2_array;					//comment of m2_array
+ * 			SubClass 
+ * 			{
+ * 				u16 m1_ele;
+ * 				u32 [] m2_array;
+ * 			} m3_subClass;
+ * 		}
+ * 		Return = 
+ * 		{
+ * 			SubClassArray []
+ * 			{
+ * 				u64 m1;
+ * 				f32 m2;
+ * 			} retA;
+ * 		}
+ * }
+ */
 
-/*接口说明 { { }*/
-Ping = 0010
+
+/* this type was test type */
+StudetInfo = 0x0001
 {
 	Send = 
 	{
-		u8 data1;	//---data1 		comment 
-		u8* data2;
-		Sut 	
-		{
-			u8[] id;	//id	comment
-			u16 * name;
-		} bob;
+		u32 * studentID;			//student ID 
 	}
 	Return = 
 	{
-		u32 [] errCode;
-	}
-}
-
-
-Pings = 0x000F
-{
-	Send = 
-	{
-		u8 data1;
-		u8[] data2;
-		TestClass
+		StudentInturduce []
 		{
-			u8 id;
-			u16* name;
-			Point
-			{
-				u8 x;
-				u8 y;
-			} p;
-		} bob;
-	}
-	Return = 
-	{
-		u32 errCode;
-	}
-}
-
-Pi = 0x0054
-{
-	Send = 
-	{
-		u8 data1; u8 data2;
-		Sutde {
-			u8 id; //ids
-			u16 name;
-			u8 * grands;		//学生的成绩
-		} bob;	//bobtype
-	}
-	Return={
-		u32 errCode;
-	}
-}
-
-class = 0x1314
-{
-	Send = 
-	{
-		Student []
-		{
-			u32 id;			//学号
-			u8 age;			//年龄
-			bool isman;		//性别 0->女 1->男
-			Bubue 
-			{
-				u8 title;
-				u16 pointx;
-				u16 pointy;
-			} bee;
-
-		} stus;		//学生组成的数组 = 和;
-		Teacher
-		{
+			bool isman;
+			u32 ID;
 			string name;
-			u32 teacherid;
-			string subject;
-		} tea;		//带班班主任
-	}
-
-	Return = 
-	{
-		u32 recCnt;
+			Class [] 
+			{
+				string className;
+				s8 grand;
+			} classType;
+		} stus;				//student infomation 
 	}
 }
 
-
+TeacherInfo = 0x0002
+{
+	Send = 
+	{
+		u32 * teacherID;
+	}
+	Return = 
+	{
+		TeacherIntroduce []
+		{
+			BaseInfo
+			{
+				u8 age;
+				bool isman;
+				u8 height_cm;
+				u8 weight_kg;
+			} base;
+			u32 salary;
+			u32 ID;
+		} teachers;
+	}
+}
 

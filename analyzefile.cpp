@@ -49,7 +49,18 @@ bool AnalyzeFile::outputC_file(MyString path)
     text.append("PTC_DECLARE_WRITE(s8, char)\n");
     text.append("PTC_DECLARE_WRITE(u64, unsigned long long )\n");
     text.append("PTC_DECLARE_WRITE(bool, Boolean)\n");
+    text.append("PTC_DECLARE_WRITE(string, char)\n");
     text.append("PTC_DECLARE_WRITE(f32, float)\n\n\n");
+    text.append("PTC_DECLARE_READ(u32,unsigned int)\n");
+    text.append("PTC_DECLARE_READ(s32, int)\n");
+    text.append("PTC_DECLARE_READ(u16, unsigned short )\n");
+    text.append("PTC_DECLARE_READ(s16, short)\n");
+    text.append("PTC_DECLARE_READ(u8, unsigned char )\n");
+    text.append("PTC_DECLARE_READ(s8, char)\n");
+    text.append("PTC_DECLARE_READ(u64, unsigned long long )\n");
+    text.append("PTC_DECLARE_READ(bool, Boolean)\n");
+    text.append("PTC_DECLARE_READ(string, char)\n");
+    text.append("PTC_DECLARE_READ(f32, float)\n\n\n");
     for (size_t i = 0; i < interfaceLib.size(); i++)
     {
         text.append(interfaceLib[i].getStrToC_file());
@@ -71,7 +82,7 @@ bool AnalyzeFile::outputH_file(MyString path)
 {
     std::cout << "filepath :" << path << "protocol.h" << std::endl;
     path.append("protocol.h");
-    MyString text = "#ifndef _PROTOCOL_H_ \n#define _PROTOCOL_H_\n\n";
+    MyString text = "#ifndef _PROTOCOL_H_INTERFACE_ \n#define _PROTOCOL_H_INTERFACE_\n\n #include<string.h>\n";
     text.append("#ifndef NULL\n#ifdef __cplusplus\n#ifndef _WIN64\n"
                 "#define NULL 0\n#else\n#define NULL 0LL\n#endif  /* W64 */\n#else\n"
                 "#define NULL ((void *)0)\n#endif\n#endif\n\n");
@@ -80,25 +91,26 @@ bool AnalyzeFile::outputH_file(MyString path)
     text.append("extern void* PTC_malloc(unsigned long long size);\n");
     text.append("extern void PTC_free(void* f);\n");
     text.append("extern void PTC_memset(void* des,int v,unsigned long long len);\n");
+    text.append("extern void* PTC_realloc(void* src,unsigned long long new_size);\n");
     text.append("extern void* PTC_memcpy(void* des,void* src,unsigned long long len);\n\n\n");
     text.append("#define PTC_DECLARE_WRITE(T, TureT)                           \\\n");
-    text.append("    inline void PTC_write##T(unsigned char *des, ##TureT val) \\\n");
+    text.append("    inline void PTC_write##T(unsigned char *des, TureT val) \\\n");
     text.append("    {                                                         \\\n");
     text.append("        union {                                               \\\n");
-    text.append("            unsigned char ch[sizeof(val)];                    \\\n");
-    text.append("            ##TureT v;                                        \\\n");
+    text.append("            TureT v;                                        \\\n");
+    text.append("            unsigned char ch[sizeof( val )];                    \\\n");
     text.append("        } un;                                                 \\\n");
     text.append("        un.v = val;                                           \\\n");
-    text.append("        PTC_memcpy(des, &un, sizeof(un));                     \\\n");
+    text.append("        PTC_memcpy(des, &un, sizeof( un ));                     \\\n");
     text.append("    } //The code bloats out how to write individual elements;\n");
     text.append("#define PTC_DECLARE_READ(T, TureT)                \\\n");
-    text.append("    inline##TureT PTC_read##T(unsigned char *src) \\\n");
+    text.append("    inline TureT PTC_read##T(unsigned char *src) \\\n");
     text.append("    {                                             \\\n");
     text.append("        union {                                   \\\n");
-    text.append("            unsigned char ch[sizeof(##TureT)];    \\\n");
-    text.append("            ##TureT v;                            \\\n");
+    text.append("            TureT v;                            \\\n");
+    text.append("            unsigned char ch[sizeof( TureT )];    \\\n");
     text.append("        } un;                                     \\\n");
-    text.append("        PTC_memcpy(un.ch, src, sizeof(un));       \\\n");
+    text.append("        PTC_memcpy(un.ch, src, sizeof( un ));       \\\n");
     text.append("        return un.v;                              \\\n");
     text.append("    } //Code bloat, the way individual elements are read at the bloat;\n");
 
@@ -108,28 +120,52 @@ bool AnalyzeFile::outputH_file(MyString path)
     text.append("        unsigned char *ret = NULL;                                       \\\n");
     text.append("        union {                                                          \\\n");
     text.append("            unsigned char ch[sizeof(*t)];                                \\\n");
-    text.append("            PTC_##T##_t v;                                                 \\\n");
+    text.append("            PTC_##T##_t v;                                               \\\n");
     text.append("        } un;                                                            \\\n");
     text.append("        un.v = *t;                                                       \\\n");
-    text.append("        ret = PTC_malloc(sizef(un));                                     \\\n");
+    text.append("        ret = (unsigned char *)PTC_malloc(sizeof(un));                   \\\n");
     text.append("        PTC_memcpy(ret, un.ch, sizeof(un));                              \\\n");
+    text.append("        (*len) += sizeof(un);                                            \\\n");
     text.append("        return ret;                                                      \\\n");
     text.append("    }\n\n");
 
     text.append("#define PTC_DECLARE_FILL(T)                                                            \\\n");
-    text.append("    inline PTC_##T##_t *PTC_fill##T(PTC_##T##_t *t, unsigned char *data, unsigned int len) \\\n");
+    text.append("    inline PTC_##T##_t *PTC_fill##T (PTC_##T##_t *t, unsigned char *data, unsigned int* len) \\\n");
     text.append("    {                                                                                  \\\n");
-    text.append("        PTC_##T_t *ret = t;                                                            \\\n");
+    text.append("        PTC_##T##_t *ret = t;                                                            \\\n");
     text.append("        union {                                                                        \\\n");
     text.append("            unsigned char ch[sizeof(*t)];                                              \\\n");
     text.append("            PTC_##T##_t v;                                                               \\\n");
     text.append("        } un;                                                                          \\\n");
     text.append("        PTC_memcpy(un.ch, data, sizeof(un));                                           \\\n");
     text.append("        if (ret == NULL)                                                               \\\n");
-    text.append("            ret = PTC_malloc(sizeof(un));                                              \\\n");
+    text.append("        ret = (PTC_##T##_t *)PTC_malloc(sizeof(un));                                 \\\n");
     text.append("        *ret = un.v;                                                                   \\\n");
+    text.append("        (*len) += sizeof(un);                                                          \\\n");
     text.append("        return ret;                                                                    \\\n");
     text.append("    }\n\n");
+    text.append("extern void PTC_writeu8(unsigned char *des, unsigned char val);\n");
+    text.append("extern void PTC_writes8(unsigned char *des, char val);\n");
+    text.append("extern void PTC_writeu16(unsigned char *des, unsigned short val);\n");
+    text.append("extern void PTC_writes16(unsigned char *des, short val);\n");
+    text.append("extern void PTC_writeu32(unsigned char *des, unsigned int val);\n");
+    text.append("extern void PTC_writes32(unsigned char *des, int val);\n");
+    text.append("extern void PTC_writef32(unsigned char *des, float val);\n");
+    text.append("extern void PTC_writebool(unsigned char *des, Boolean val);\n");
+    text.append("extern void PTC_writestring(unsigned char *des, char val);\n");
+    text.append("extern void PTC_writeu64(unsigned char *des,unsigned long long val);\n\n");
+
+    text.append("extern unsigned char PTC_readu8(unsigned char *src);\n");
+    text.append("extern char PTC_reads8(unsigned char *src);\n");
+    text.append("extern unsigned short PTC_readu16(unsigned char *src);\n");
+    text.append("extern short PTC_reads16(unsigned char *src);\n");
+    text.append("extern unsigned int PTC_readu32(unsigned char *src);\n");
+    text.append("extern int PTC_reads32(unsigned char *src);\n");
+    text.append("extern float PTC_readf32(unsigned char *src);\n");
+    text.append("extern Boolean PTC_readbool(unsigned char *src);\n");
+    text.append("extern char PTC_readstring(unsigned char *src);\n");
+    text.append("extern unsigned long long PTC_readu64(unsigned char *src);\n\n");
+
 
     for (size_t i = 0; i < interfaceLib.size(); i++)
     {

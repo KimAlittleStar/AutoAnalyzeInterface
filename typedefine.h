@@ -36,11 +36,11 @@ typedef enum
 const static char *typeConvert[][4] = // typestr,Cstr,JavaStr
     {
         {"u8", "unsigned char ", "unsigned char ", reinterpret_cast<const char *>(TYPE_u8)},
-        {"s8", "unsigned char ", "signed char ", reinterpret_cast<const char *>(TYPE_s8)},
+        {"s8", "signed char ", "signed char ", reinterpret_cast<const char *>(TYPE_s8)},
         {"u16", "unsigned short ", "unsigned shor t", reinterpret_cast<const char *>(TYPE_u16)},
-        {"s16", "unsigned char ", "signed short ", reinterpret_cast<const char *>(TYPE_s16)},
+        {"s16", "unsigned short ", "signed short ", reinterpret_cast<const char *>(TYPE_s16)},
         {"u32", "unsigned int ", "unsigned int ", reinterpret_cast<const char *>(TYPE_u32)},
-        {"s32", "unsigned char ", "signed int ", reinterpret_cast<const char *>(TYPE_s32)},
+        {"s32", "unsigned int ", "signed int ", reinterpret_cast<const char *>(TYPE_s32)},
         {"u64", "unsigned long long ", "unsigned long long ", reinterpret_cast<const char *>(TYPE_u64)},
         {"bool", "Boolean ", "bool ", reinterpret_cast<const char *>(TYPE_bool)},
         {"f32", "float ", "float ", reinterpret_cast<const char *>(TYPE_f32)},

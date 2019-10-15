@@ -28,6 +28,7 @@ bool TypeDefine::fillTypedef(const MyString *str)
             buff[i].removeAll("]");
             buff[i].removeAll("*");
             buff[i].removeAll(" ");
+            buff[i + 2].removeAll(" ");
             sub.setTypeName(buff[i]);
             sub.setVarName(buff[i + 2]);
             sub.fillTypedef(&buff[i + 1]);
@@ -147,13 +148,14 @@ const MyString TypeDefine::getStrToH_file(void)
     ret.append("\n} PTC_" + tpName + "_t ;" + comment + "\n");
     for (size_t i = 0; i < subType.size(); i++)
     { //判断当前的类型中子类型是不是可以使用固定长度的数组作为存储空间;如果可以,那么就为他声明todata fill 函数
-        if (subType[i].getTypeENum() == TYPE_other && judgeHasArray() == true && subType[i].judgeHasArray() == false)
+        if ((subType[i].getTypeENum() == TYPE_other||subType[i].getTypeENum() == TYPE_others)
+                && judgeHasArray() == true && subType[i].judgeHasArray() == false)
         {
 
             ret.append("unsigned char* PTC_todata" + subType[i].getTypeName() + "(" +
                        subType[i].getTypeName_Cfamily() + "* t,unsigned int * len);\n");
             ret.append("PTC_" + subType[i].getTypeName() + "_t* PTC_fill" + subType[i].getTypeName() + "(" +
-                       subType[i].getTypeName_Cfamily() + "* t,unsigned char * data,unsigned int len);\n");
+                       subType[i].getTypeName_Cfamily() + "* t,unsigned char * data,unsigned int* len);\n");
         }
     }
     if (((typeNum == TYPE_other || typeNum == TYPE_others) && judgeHasArray() == true) || typeNum == TYPE_SendRet)
@@ -164,7 +166,7 @@ const MyString TypeDefine::getStrToH_file(void)
         ret.append("unsigned char* PTC_todata" + tpName + "(" +
                    getTypeName_Cfamily() + "* t,unsigned int * len);\n");
         ret.append("PTC_" + tpName + "_t* PTC_fill" + tpName + "(" +
-                   getTypeName_Cfamily() + "* t,unsigned char * data,unsigned int len);\n");
+                   getTypeName_Cfamily() + "* t,unsigned char * data,unsigned int* len);\n");
     }
 
     return ret;
@@ -194,7 +196,7 @@ const MyString TypeDefine::getNewfunctionStr()
     {
         ret.append(getTypeName_Cfamily() + " * PTC_new" + tpName + "() \n{\n");
         ret.append("\t" + getTypeName_Cfamily() + "* ret = NULL;\n");
-        ret.append("\t ret = PTC_malloc(sizeof(" + getTypeName_Cfamily() + "));\n");
+        ret.append("\t ret =  (" + getTypeName_Cfamily() + " *)PTC_malloc(sizeof(" + getTypeName_Cfamily() + "));\n");
         ret.append("\t PTC_memset(ret,0,sizeof(" + getTypeName_Cfamily() + "));\n");
         ret.append("\t return ret;\n");
         ret.append("\n}\n\n");
@@ -216,7 +218,8 @@ const MyString TypeDefine::getDeletefunctionStr()
                 ret.append("\t\tif(m->" + subType[i].getVarName() + "!= NULL)\n\t\t{\n");
                 if (subType[i].getTypeENum() == TYPE_others)
                 {
-                    ret.append("\t\t\tPTC_delete" + subType[i].getTypeName() + "(m->" + subType[i].getVarName() + ");\n");
+                    ret.append("\t\t\tfor(unsigned int i = 0;i<m->" + subType[i].getVarName() + "_lengh;i++)\n");
+                    ret.append("\t\t\t\tPTC_delete" + subType[i].getTypeName() + "(m->" + subType[i].getVarName() + " + i);\n");
                 }
                 else
                 {
@@ -252,14 +255,14 @@ const MyString TypeDefine::getTodatafunctionStr()
             ret.append("{\n");
             ret.append("\tif(t == NULL)\t {return NULL;}\n");
             ret.append("\tunsigned int lengh = 0;\n\tunsigned int memlengh = sizeof(*t);\n\n");
-            ret.append("\tunsigned char * ret = PTC_malloc(sizeof(memlengh));\n\tunsigned char * pbuff = ret;");
+            ret.append("\tunsigned char * ret =  (unsigned char*)PTC_malloc(memlengh);\n\tunsigned char * pbuff = ret;\n");
+            ret.append("    unsigned int otherLen = 0;\n");
             for (size_t i = 0; i < subType.size(); i++)
             {
                 switch (subType[i].getTypeENum())
                 { //依据不同的类型写入到内存中去;
                 case TYPE_u8:
                 case TYPE_s8:
-                case TYPE_u8s:
                 case TYPE_u16:
                 case TYPE_s16:
                 case TYPE_u32:
@@ -270,6 +273,7 @@ const MyString TypeDefine::getTodatafunctionStr()
                     ret.append("    PTC_write" + subType[i].getTypeName() + "(ret + lengh, t->" + subType[i].getVarName() + ");\n");
                     ret.append("    lengh += sizeof(t->" + subType[i].getVarName() + ");\n\n");
                     break;
+                case TYPE_u8s:
                 case TYPE_s8s:
                 case TYPE_u16s:
                 case TYPE_s16s:
@@ -281,24 +285,40 @@ const MyString TypeDefine::getTodatafunctionStr()
                 case TYPE_string:
                     ret.append("    PTC_writeu32(ret + lengh,t->" + subType[i].getVarName() + "_lengh);\n");
                     ret.append("    lengh += sizeof(t->" + subType[i].getVarName() + "_lengh);\n");
-                    ret.append("    memlengh += t->" + subType[i].getVarName() + "_lengh * (sizeof(t->" + subType[i].getVarName() + "));");
-                    ret.append("    pbuff = PTC_malloc(memlengh);\n");
-                    ret.append("    PTC_memcpy(pbuff,ret,lengh);\n");
-                    ret.append("    PTC_free(ret);\n\tret = pbuff;\n");
-                    ret.append("    for(unsigned int i;i<t->" + subType[i].getVarName() + "_lengh;i++)\n");
+                    ret.append("    memlengh += t->" + subType[i].getVarName() + "_lengh * (sizeof(t->" + subType[i].getVarName() + "[0]));");
+                    ret.append("    ret =  (unsigned char*)PTC_realloc(ret,memlengh);\n");
+                    ret.append("    for(unsigned int i = 0;i<t->" + subType[i].getVarName() + "_lengh;i++)\n");
                     ret.append("    {\n");
-                    ret.append("        PTC_write" + subType[i].getTypeName() + "(ret + lengh, t->" + subType[i].getVarName() + ");\n");
-                    ret.append("        lengh += sizeof(t->" + subType[i].getVarName() + ");\n\n");
-                    ret.append("    }\n");
+                    ret.append("        PTC_write" + subType[i].getTypeName() + "(ret + lengh, t->" + subType[i].getVarName() + "[i]);\n");
+                    ret.append("        lengh += sizeof(t->" + subType[i].getVarName() + "[0]);\n\n");
+                    ret.append("    }\n\n");
                     break;
                 case TYPE_other:
+                    ret.append("    otherLen = 0;\n");
+                    ret.append("    pbuff = PTC_todata" + subType[i].getTypeName() + "(&t->" + subType[i].getVarName() + ",&otherLen);\n");
+                    ret.append("    memlengh += otherLen;\n");
+                    ret.append("    ret =  (unsigned char*)PTC_realloc(ret,memlengh);\n");
+                    ret.append("    PTC_memcpy(ret+lengh,pbuff,otherLen);\n");
+                    ret.append("    PTC_free(pbuff);\n\tlengh+=otherLen;\n\n");
                     break;
                 case TYPE_others:
+                    ret.append("    PTC_writeu32(ret + lengh,t->" + subType[i].getVarName() + "_lengh);\n");
+                    ret.append("    lengh += sizeof(t->" + subType[i].getVarName() + "_lengh);\n");
+                    ret.append("    for(unsigned int i = 0;i<t->" + subType[i].getVarName() + "_lengh;i++)\n");
+                    ret.append("    {\n");
+                    ret.append("        otherLen = 0;\n");
+                    ret.append("        pbuff = PTC_todata" + subType[i].getTypeName() + "(&t->" + subType[i].getVarName() + "[i],&otherLen);\n");
+                    ret.append("        memlengh += otherLen;\n");
+                    ret.append("        ret =  (unsigned char*)PTC_realloc(ret,memlengh);\n");
+                    ret.append("        PTC_memcpy(ret+lengh,pbuff,otherLen);\n");
+                    ret.append("        PTC_free(pbuff);\n\tlengh+=otherLen;\n\n");
+                    ret.append("    }\n\n");
                     break;
                 default:
                     break;
                 }
             }
+            ret.append("    ret = (unsigned char*)PTC_realloc(ret,lengh+1);\n");
             ret.append("    (*len) += lengh;\n\n");
             ret.append("    return ret;\n");
             ret.append("\n}\n\n");
@@ -309,8 +329,78 @@ const MyString TypeDefine::getTodatafunctionStr()
 const MyString TypeDefine::getFillfunctionStr()
 {
     MyString ret;
-    if (typeNum == TYPE_SendRet || typeNum == TYPE_others)
+    if (typeNum == TYPE_SendRet || typeNum == TYPE_others || typeNum == TYPE_other)
     {
+        if (judgeHasArray() == false)
+        {
+            ret.append("PTC_DECLARE_FILL(" + tpName + ")\t\t//declare fill function;\n\n");
+            return ret;
+        }
+        else
+        {
+            ret.append(getTypeName_Cfamily() + " * PTC_fill" + tpName + "(" + getTypeName_Cfamily() + "* t,unsigned char * data,unsigned int* len)\n");
+            ret.append("{\n");
+            ret.append("\tif(data == NULL)\t {return NULL;}\n");
+            ret.append("\t" + getTypeName_Cfamily() + " * ret = t;\n");
+            ret.append("\tif(ret == NULL)\n\t\tret = PTC_new" + tpName + "();\n");
+            ret.append("\tunsigned int index = 0;");
+            for (size_t i = 0; i < subType.size(); i++)
+            {
+                switch (subType[i].getTypeENum())
+                { //依据不同的类型写入到内存中去;
+                case TYPE_u8:
+                case TYPE_s8:
+                case TYPE_u16:
+                case TYPE_s16:
+                case TYPE_u32:
+                case TYPE_s32:
+                case TYPE_u64:
+                case TYPE_f32:
+                case TYPE_bool:
+                    ret.append("    ret->" + subType[i].getVarName() + " = PTC_read" + subType[i].getTypeName() + "(data+index);\n");
+                    ret.append("    index += sizeof(ret->" + subType[i].getVarName() + ");\n");
+                    break;
+                case TYPE_u8s:
+                case TYPE_s8s:
+                case TYPE_u16s:
+                case TYPE_s16s:
+                case TYPE_u32s:
+                case TYPE_s32s:
+                case TYPE_u64s:
+                case TYPE_f32s:
+                case TYPE_bools:
+                case TYPE_string:
+                    ret.append("    ret->" + subType[i].getVarName() + "_lengh = PTC_readu32(data+index);\n");
+                    ret.append("    index += sizeof(ret->" + subType[i].getVarName() + "_lengh);\n");
+                    ret.append("    ret->" + subType[i].getVarName() + " = PTC_malloc(ret->" + subType[i].getVarName() +
+                               "_lengh * sizeof(ret->" + subType[i].getVarName() + "[0]));\n");
+                    ret.append("    for(unsigned int i = 0;i<ret->" + subType[i].getVarName() + "_lengh ;i++)\n");
+                    ret.append("    {\n");
+                    ret.append("        ret->" + subType[i].getVarName() + "[i] = PTC_read" + subType[i].getTypeName() + "(data+index);\n");
+                    ret.append("        index += sizeof(ret->" + subType[i].getVarName() + "[0]);\n");
+                    ret.append("    }\n\n");
+                    break;
+                case TYPE_other:
+                    ret.append("    PTC_fill" + subType[i].getTypeName() + "(&(ret->" + subType[i].getVarName() + "),data+index,&index);\n");
+                    break;
+                case TYPE_others:
+                    ret.append("    ret->" + subType[i].getVarName() + "_lengh = PTC_readu32(data+index);\n");
+                    ret.append("    index += sizeof(ret->" + subType[i].getVarName() + "_lengh);\n");
+                    ret.append("    ret->" + subType[i].getVarName() + " = PTC_malloc(ret->" + subType[i].getVarName() +
+                               "_lengh * sizeof(ret->" + subType[i].getVarName() + "[0]));\n");
+                    ret.append("    for(unsigned int i = 0;i<ret->" + subType[i].getVarName() + "_lengh ;i++)\n");
+                    ret.append("    {\n");
+                    ret.append("        PTC_fill" + subType[i].getTypeName() + "(ret->" + subType[i].getVarName() + "+i,data+index,&index);\n");
+                    ret.append("    }\n\n");
+                    break;
+                default:
+                    break;
+                }
+            }
+            ret.append("    (*len) += index;\n");
+            ret.append("    return ret;\n");
+            ret.append("\n}\n\n");
+        }
     }
     return ret;
 }
