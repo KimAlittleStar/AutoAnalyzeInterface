@@ -79,3 +79,50 @@ TeacherInfo = 0x0002
 	}
 }
 
+TestClass_1 = 0x0003
+{
+	Send = 
+	{
+		u8 m1;
+		s8 m2;
+		u16 m3;
+		s16 m4;
+		u32 m5;
+		s32 m6;
+		u64 m7;
+		f32 m8;
+		bool m9;
+	}
+	Return = 
+	{
+		u8  * m1;
+		s8  * m2;
+		u16 * m3;
+		s16 * m4;
+		u32 * m5;
+		s32 * m6;
+		u64 * m7;
+		f32 * m8;
+		bool* m9;
+		string m10;
+	}
+}
+
+TestClass_2 = 0x004
+{
+	Send = 
+	{
+		Test_2_sub 
+		{
+			Test_3_sub []
+			{
+				u8 sub_m3;
+			} sub_m2;
+		} sub_m1;
+	}
+	Return = 
+	{
+		u32 getsize;
+	}	
+}
+

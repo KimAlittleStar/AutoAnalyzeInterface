@@ -342,7 +342,8 @@ const MyString TypeDefine::getFillfunctionStr()
             ret.append("{\n");
             ret.append("\tif(data == NULL)\t {return NULL;}\n");
             ret.append("\t" + getTypeName_Cfamily() + " * ret = t;\n");
-            ret.append("\tif(ret == NULL)\n\t\tret = PTC_new" + tpName + "();\n");
+            if(typeNum == TYPE_SendRet)
+                ret.append("\tif(ret == NULL)\n\t\tret = PTC_new" + tpName + "();\n");
             ret.append("\tunsigned int index = 0;");
             for (size_t i = 0; i < subType.size(); i++)
             {
