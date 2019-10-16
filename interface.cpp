@@ -1,6 +1,6 @@
 #include "interface.h"
-#include <stdio.h>
 #include <iostream>
+#include <stdio.h>
 Interface::Interface()
 {
     interfaceID = 0;
@@ -9,7 +9,7 @@ Interface::Interface()
 
 bool Interface::fillInterface(std::string str)
 {
-    std::cout<<"fillInterface"<<std::endl;
+    std::cout << "fillInterface" << std::endl;
     size_t star = str.find("/*");
     size_t end = str.find("*/");
     if (star != end)
@@ -18,12 +18,11 @@ bool Interface::fillInterface(std::string str)
         str.erase(star, end - star + 2);
     }
     MyString ss = str;
-    ss.replace("\t"," ");
-    while(ss.replace("  "," ") != -1)
+    ss.replace("\t", " ");
+    while (ss.replace("  ", " ") != -1)
     {
-
     }
-    ss.replace("\n ","\n");
+    ss.replace("\n ", "\n");
     //    std::cout<<"str = \n\n"<<ss<<"\n\n";
 
     //    std::vector<MyString> buff = ss.splits("{=}");
@@ -57,24 +56,23 @@ bool Interface::fillInterface(std::string str)
     buff = buff[2].splits("{= \n}");
     if (buff.size() != 4)
         return false;
-    if(buff[0].find("Send") != std::string::npos)
+    if (buff[0].find("Send") != std::string::npos)
     {
         MyString tname = interfaceName;
-        sendType.setTypeName(tname.append("_"+ buff[0]));
+        sendType.setTypeName(tname.append("_" + buff[0]));
         sendType.setTypeENum(TYPE_SendRet);
         sendType.fillTypedef(&buff[1]);
     }
-    if(buff[2].find("Return") != std::string::npos)
+    if (buff[2].find("Return") != std::string::npos)
     {
         MyString tname = interfaceName;
-        retType.setTypeName(tname.append("_"+ buff[2]));
+        retType.setTypeName(tname.append("_" + buff[2]));
         retType.setTypeENum(TYPE_SendRet);
         retType.fillTypedef(&buff[3]);
     }
     std::cout << "interface NAME =" << interfaceName << "ID = " << interfaceID << "\n**\n";
     return true;
 }
-
 
 const MyString Interface::getStrToC_file(void)
 {
@@ -88,4 +86,30 @@ const MyString Interface::getStrToH_file(void)
     ret.append(retType.getStrToH_file());
 
     return ret;
+}
+
+const MyString Interface::getInterfaceName(void) const
+{
+    return interfaceName;
+}
+
+const MyString Interface::getCallbackFuncDefine() const
+{
+    return MyString("void PTC_" + getInterfaceName() + "Callback(PTC_u8* data,PTC_u32 * len,Boolean isSend);\n");
+}
+const MyString Interface::getCallbackFuncDeclare() const
+{
+    MyString ret = "__weak void PTC_" + getInterfaceName() + "Callback(PTC_u8* data,PTC_u32 * len,Boolean isSend)\n{\n";
+    ret.append("    if(isSend == TRUE)\n");
+    ret.append("    {\n");
+    MyString showSend = sendType.getShowOutFuntion("");
+    showSend.replace("\n", "\n\t\t");
+    ret.append(showSend);
+    ret.append("    }else");
+    ret.append("    {\n");
+    MyString showRet = retType.getShowOutFuntion("");
+    showRet.replace("\n", "\n\t\t");
+    ret.append(showRet);
+    ret.append("    }\n");
+    ret.append("\n}");
 }

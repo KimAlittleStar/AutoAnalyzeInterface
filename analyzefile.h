@@ -1,19 +1,19 @@
 #ifndef ANALYZEFILE_H
 #define ANALYZEFILE_H
 
-#include <fstream>
-#include <vector>
 #include "interface.h"
 #include "mystring.h"
+#include <fstream>
+#include <vector>
 class AnalyzeFile
 {
 public:
     AnalyzeFile();
     ~AnalyzeFile();
-    AnalyzeFile(char* inputfilePath);
+    AnalyzeFile(char *inputfilePath);
     AnalyzeFile(std::string inputfilePath);
 
-    bool setInputfile(const MyString & inputfilePath);
+    bool setInputfile(const MyString &inputfilePath);
 
     bool outputC_file(MyString path = "");
     bool outputH_file(MyString path = "");
@@ -26,14 +26,14 @@ private:
     std::vector<Interface> interfaceLib;
 
     MyString filecomment;
-
-    int pushTo_interfaceLib(std::ifstream* f);
-    std::vector<MyString>* getInterfaceList(const MyString& text);
-
+    const MyString getDefineBaseHfile();
+    const MyString getCallbackFuncDefine();
+    const MyString getCallbackFuncDeclare();
+    int pushTo_interfaceLib(std::ifstream *f);
+    std::vector<MyString> *getInterfaceList(const MyString &text);
 };
 
 #endif // ANALYZEFILE_H
-
 
 /*
 / *
