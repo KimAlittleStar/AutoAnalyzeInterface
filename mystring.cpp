@@ -42,7 +42,7 @@ int MyString::replace(const std::string & des ,const std::string & src,int index
     std::string::size_type pos = 0;
     int cnt = 1;
     int ret = -1;
-    while((pos = this->find(des)) != std::string::npos)   //替换所有指定子串
+    while((pos = this->find(des,pos+(!!pos)*(src.size()-1))) != std::string::npos)   //替换所有指定子串
     {
        // replace();
         if(ret == -1)
@@ -51,6 +51,8 @@ int MyString::replace(const std::string & des ,const std::string & src,int index
         {
             std::string::replace(pos, des.length(), src);
             ret++;
+            pos++;
+
         }
         cnt++;
 

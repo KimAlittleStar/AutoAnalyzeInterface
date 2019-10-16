@@ -99,17 +99,18 @@ const MyString Interface::getCallbackFuncDefine() const
 }
 const MyString Interface::getCallbackFuncDeclare() const
 {
-    MyString ret = "__weak void PTC_" + getInterfaceName() + "Callback(PTC_u8* data,PTC_u32 * len,Boolean isSend)\n{\n";
+    MyString ret = "#pragma weak PTC_" + getInterfaceName() + "Callback\nvoid PTC_" + getInterfaceName() + "Callback(PTC_u8* data,PTC_u32 * len,Boolean isSend)\n{\n";
     ret.append("    if(isSend == TRUE)\n");
-    ret.append("    {\n");
+    ret.append("    {");
     MyString showSend = sendType.getShowOutFuntion("");
     showSend.replace("\n", "\n\t\t");
     ret.append(showSend);
-    ret.append("    }else");
-    ret.append("    {\n");
+    ret.append("\n    }else\n");
+    ret.append("    {");
     MyString showRet = retType.getShowOutFuntion("");
     showRet.replace("\n", "\n\t\t");
     ret.append(showRet);
-    ret.append("    }\n");
-    ret.append("\n}");
+    ret.append("\n    }\n");
+    ret.append("}\n\n");
+    return ret;
 }

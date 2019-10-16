@@ -430,17 +430,102 @@ const MyString TypeDefine::getShowOutFuntion(MyString perStr) const
     MyString ret;
     if (typeNum == TYPE_SendRet)
     {
-        ret.append("\n" + getTypeName_Cfamily() + "* show = PTC_fill" + tpName + "(NULL,data,&len);\n");
-        ret.append("PTC_PRINTF(\"show " + getTypeName_Cfamily() + "\n\");\n");
+        ret.append("\n" + getTypeName_Cfamily() + "* show = PTC_fill" + tpName + "(NULL,data,len);\n");
+        ret.append("PTC_PRINTF(\"show " + getTypeName_Cfamily() + "\\n\");\n");
         perStr.append("  ");
         for (size_t i = 0; i < subType.size(); i++)
         {
-            ret.append(subType[i].getShowOutFuntion(perStr));
+            ret.append(subType[i].getShowOutFuntion(perStr, "show->"));
         }
-        ret.append("PTC_PRINTF(\"show " + getTypeName_Cfamily() + "_OVER\n\");\n");
+        ret.append("PTC_PRINTF(\"show " + getTypeName_Cfamily() + "_OVER\\n\");\n");
+        ret.append("PTC_delete" + getTypeName() + "(show);\n");
     }
-    else
+    return ret;
+}
+
+const MyString TypeDefine::getShowOutFuntion(MyString perStr, MyString mother) const
+{
+    MyString ret = "\n";
+
+    switch (typeNum)
     {
+    case TYPE_u8:
+    case TYPE_u16:
+    case TYPE_u32:
+        ret.append("PTC_PRINTF(\"" + perStr + varName + " = %u\\n\"," + mother + varName + ");\n");
+        break;
+    case TYPE_s8:
+    case TYPE_s16:
+    case TYPE_s32:
+        ret.append("PTC_PRINTF(\"" + perStr + varName + " = %d\\n\"," + mother + varName + ");\n");
+        break;
+    case TYPE_u64:
+        ret.append("PTC_PRINTF(\"" + perStr + varName + " = %lld\\n\"," + mother + varName + ");\n");
+        break;
+    case TYPE_f32:
+        ret.append("PTC_PRINTF(\"" + perStr + varName + " = %f\\n\",(double)" + mother + varName + ");\n");
+        break;
+    case TYPE_bool:
+        ret.append("PTC_PRINTF(\"" + perStr + varName + " = %s\\n\",(" + mother + varName +
+                   " == TRUE)?(\"TRUE\"):(\"FALSE\"));\n");
+        break;
+    case TYPE_u8s:
+    case TYPE_s8s:
+    case TYPE_u16s:
+        ret.append("PTC_PRINTF(\"" + perStr + varName + "_lengh = %u\\n\"," + mother + varName + "_lengh);\n");
+        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("    PTC_PRINTF(\"" + perStr + varName + "[i] = %8u \"," + mother + varName + "[i]);\n");
+        break;
+    case TYPE_s16s:
+    case TYPE_u32s:
+    case TYPE_s32s:
+        ret.append("PTC_PRINTF(\"" + perStr + varName + "_lengh = %u\\n\"," + mother + varName + "_lengh);\n");
+        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("    PTC_PRINTF(\"" + perStr + varName + "[i] = %8d \"," + mother + varName + "[i]);\n");
+        break;
+    case TYPE_u64s:
+        ret.append("PTC_PRINTF(\"" + perStr + varName + "_lengh = %u\\n\"," + mother + varName + "_lengh);\n");
+        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("    PTC_PRINTF(\"" + perStr  + varName + "[i] = %8lld \"," + mother + varName + "[i]);\n");
+        break;
+    case TYPE_f32s:
+        ret.append("PTC_PRINTF(\"" + perStr  + varName + "_lengh = %u\\n\"," + mother + varName + "_lengh);\n");
+        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("    PTC_PRINTF(\"" + perStr  + varName + "[i] = %8f \",(double)" + mother + varName + "[i]);\n");
+        break;
+
+    case TYPE_bools:
+        ret.append("PTC_PRINTF(\"" + perStr + varName + "_lengh = %u\\n\"," + mother + varName + "_lengh);\n");
+        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("    PTC_PRINTF(\"" + perStr  + varName + "[i] = %5s \",(" + mother + varName +
+                   "[i] == TRUE)?(\"TRUE\"):(\"FALSE\"));\n");
+        break;
+
+    case TYPE_string:
+        ret.append("PTC_PRINTF(\"" + perStr  + varName + "_lengh = %u\\n\"," + mother + varName + "_lengh);\n");
+        ret.append("PTC_PRINTF(\"" + perStr  + varName + " = %s\\n\"," + mother + varName + ");\n");
+        break;
+    case TYPE_other:
+        for (size_t i = 0; i < subType.size(); i++)
+        {
+            ret.append(subType[i].getShowOutFuntion(perStr + "  ", mother + varName + "."));
+        }
+        break;
+    case TYPE_others:
+    {
+        MyString item = tpName+"_"+varName;
+        ret.append("PTC_PRINTF(\"" + perStr + varName + "_lengh = %u\\n\"," + mother + varName + "_lengh);\n");
+        ret.append("for(PTC_u32 "+item+" = 0;"+item+"<" + mother + varName + "_lengh;"+item+"++)\n");
+        ret.append("{\n");
+        for (size_t i = 0; i < subType.size(); i++)
+        {
+            ret.append(subType[i].getShowOutFuntion(perStr + "  ", mother + varName + "["+item+"]."));
+        }
+        ret.append("\n}\n");
+    }
+        break;
+    default:
+        break;
     }
     return ret;
 }

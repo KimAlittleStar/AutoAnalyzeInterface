@@ -84,7 +84,8 @@ bool AnalyzeFile::outputH_file(MyString path)
 {
     std::cout << "filepath :" << path << "protocol.h" << std::endl;
     path.append("protocol.h");
-    MyString text = "#ifndef PROTOCOL_H_INTERFACE_ \n#define PROTOCOL_H_INTERFACE_\n\n #include<string.h>\n";
+    MyString text = "#ifndef PROTOCOL_H_INTERFACE_ \n#define PROTOCOL_H_INTERFACE_\n\n";
+    text.append("#include<string.h>\n#include<stdio.h>\n");
 
     text.append(getDefineBaseHfile());
     text.append(getCallbackFuncDefine());
@@ -337,6 +338,7 @@ const MyString AnalyzeFile::getCallbackFuncDefine()
 const MyString AnalyzeFile::getCallbackFuncDeclare()
 {
     MyString ret;
+    MyString interfaceDeclare;
     ret.append("void PTC_InterfaceProcess(PTC_u8 *data, PTC_InterFace_e id, Boolean isSend)\n");
     ret.append("{\n");
     ret.append("    PTC_u32 len = 0;\n");
@@ -347,11 +349,13 @@ const MyString AnalyzeFile::getCallbackFuncDeclare()
         ret.append("    case PTC_" + interfaceLib[i].getInterfaceName() + "_e:\n");
         ret.append("        PTC_" + interfaceLib[i].getInterfaceName() + "Callback(data, &len, isSend);\n");
         ret.append("        break;\n");
+        interfaceDeclare.append(interfaceLib[i].getCallbackFuncDeclare());
     }
     ret.append("    \n");
-    ret.append("    default:PTC_PRINTF(\"ERRORTYPE = %d\\n\\n\",id)// error type occur\n");
+    ret.append("    default:PTC_PRINTF(\"ERRORTYPE = %d\\n\\n\",id) ;\t// error type occur\n");
     ret.append("        break;\n");
     ret.append("    }\n");
     ret.append("}\n");
+    ret.append(interfaceDeclare);
     return ret;
 }

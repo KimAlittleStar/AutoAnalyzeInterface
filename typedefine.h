@@ -80,6 +80,7 @@ public:
     TYPE_e getTypeENum(void) const { return typeNum; }
 
     const MyString getShowOutFuntion(MyString perStr) const;
+    const MyString getShowOutFuntion(MyString perStr, MyString mother) const;
 
 private:
     //    std::vector<TypeElement> ele;
