@@ -224,9 +224,11 @@ const MyString AnalyzeFile::getDefineBaseHfile()
                 "#define PTC_NULL nullptr\n#else\n/* CPP */\n"
                 "#define PTC_NULL ((void *)0)\n#endif\n#endif\n\n");
     text.append("#ifdef __cplusplus\n#define PTC_REPOINT(TYPE,VALUE) reinterpret_cast<TYPE>( VALUE )\n");
-    text.append("#else\n#define PTC_REPOINT(TYPE,VALUE) (TYPE )( VALUE )\n#endif \n");
+    text.append("#define PTC_RETYPE(TYPE,VALUE) static_cast<TYPE>( VALUE )\n");
+    text.append("#else\n#define PTC_REPOINT(TYPE,VALUE) (TYPE )( VALUE )\n");
+    text.append("#define PTC_RETYPE(TYPE,VALUE) ( TYPE ) (VALUE)\n#endif \n");
     ///< 定义Boolean 自定义结构类
-    text.append("typedef enum \n{\n\tTRUE = 1,\n\tFALSE = !TRUE\n} Boolean;\n\n");
+    text.append("typedef unsigned char Boolean;\n#define FALSE 0u\n#define TRUE (!FALSE)\n");
 
     ///< 自定义各种类型
     text.append("typedef unsigned char  PTC_u8;\n");
@@ -334,7 +336,7 @@ const MyString AnalyzeFile::getDefineBaseHfile()
 const MyString AnalyzeFile::getCallbackFuncDefine()
 {
     MyString ret;
-    MyString fundef = "void PTC_InterfaceProcess(PTC_u8* data,PTC_InterFace_e id,Boolean isSend);\
+    MyString fundef = "void PTC_InterfaceProcess(PTC_u8* data);\
     \t\t// all data process function enter way;\n\n";
     ret.append("\n\ntypedef enum\n{\n\t");
     for (size_t i = 0; i < interfaceLib.size(); i++)
@@ -351,8 +353,10 @@ const MyString AnalyzeFile::getCallbackFuncDeclare()
 {
     MyString ret;
     MyString interfaceDeclare;
-    ret.append("void PTC_InterfaceProcess(PTC_u8 *data, PTC_InterFace_e id, Boolean isSend)\n");
+    ret.append("void PTC_InterfaceProcess(PTC_u8 *data)\n");
     ret.append("{\n");
+    ret.append("    PTC_u16 id = PTC_readu16(data);\n");
+    ret.append("    Boolean isSend = PTC_readbool(data+2);\n");
     ret.append("    PTC_u32 len = 0;\n");
     ret.append("    switch (id)\n");
     ret.append("    {\n");

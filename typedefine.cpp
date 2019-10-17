@@ -1,6 +1,20 @@
 #include "typedefine.h"
 #include <iostream>
 #include <string.h>
+
+const static char *typeConvert[][4] = // typestr,Cstr,JavaStr
+    {
+        {"u8", "PTC_u8 ", "unsigned char ", reinterpret_cast<const char *>(TYPE_u8)},
+        {"s8", "PTC_s8 ", "signed char ", reinterpret_cast<const char *>(TYPE_s8)},
+        {"u16", "PTC_u16 ", "unsigned short ", reinterpret_cast<const char *>(TYPE_u16)},
+        {"s16", "PTC_s16 ", "signed short ", reinterpret_cast<const char *>(TYPE_s16)},
+        {"u32", "PTC_u32 ", "unsigned int ", reinterpret_cast<const char *>(TYPE_u32)},
+        {"s32", "PTC_s32 ", "signed int ", reinterpret_cast<const char *>(TYPE_s32)},
+        {"u64", "PTC_u64 ", "unsigned long long ", reinterpret_cast<const char *>(TYPE_u64)},
+        {"bool", "Boolean ", "bool ", reinterpret_cast<const char *>(TYPE_bool)},
+        {"f32", "PTC_f32 ", "float ", reinterpret_cast<const char *>(TYPE_f32)},
+        {"string", "char ", "String ", reinterpret_cast<const char *>(TYPE_string)}};
+
 TypeDefine::TypeDefine()
 {
 }
@@ -251,8 +265,34 @@ const MyString TypeDefine::getTodatafunctionStr()
             ret.append("{\n");
             ret.append("\tif(t == PTC_NULL)\t {return PTC_NULL;}\n");
             ret.append("\tPTC_u32 lengh = 0;\n\tPTC_u32 memlengh = sizeof(*t);\n\n");
-            ret.append("\tPTC_u8 * ret =  PTC_REPOINT(PTC_u8*,PTC_malloc(memlengh));\n\tPTC_u8 * pbuff = ret;\n");
-            ret.append("    PTC_u32 otherLen = 0;\n");
+            if (typeNum == TYPE_SendRet)
+            {
+                ret.append("\tmemlengh += sizeof(Boolean)+2;\n\n");
+            }
+            ret.append("\tPTC_u8 * ret =  PTC_REPOINT(PTC_u8*,PTC_malloc(memlengh));\n");
+            if (judgeHasOther() == true)
+                ret.append("\tPTC_u8 * pbuff = ret;\n    PTC_u32 otherLen = 0;\n");
+
+            if (typeNum == TYPE_SendRet)
+            {
+                MyString iname = tpName;
+                if (iname.find("_Send") != std::string::npos)
+                {
+                    iname.removeAll("_Send");
+                    iname = "PTC_" + iname + "_e";
+                    ret.append("\tPTC_writeu16(ret," + iname + "&0xFFFF);\n");
+                    ret.append("\tPTC_writebool(ret+2,TRUE);\n");
+                    ret.append("\tlengh +=3;");
+                }
+                else if (iname.find("_Return") != std::string::npos)
+                {
+                    iname.removeAll("_Return");
+                    iname = "PTC_" + iname + "_e";
+                    ret.append("\tPTC_writeu16(ret," + iname + "&0xFFFF);\n");
+                    ret.append("\tPTC_writebool(ret+2,FALSE);\n");
+                    ret.append("\tlengh +=3;");
+                }
+            }
             for (size_t i = 0; i < subType.size(); i++)
             {
                 switch (subType[i].getTypeENum())
@@ -341,6 +381,10 @@ const MyString TypeDefine::getFillfunctionStr()
             if (typeNum == TYPE_SendRet)
                 ret.append("\tif(ret == PTC_NULL)\n\t\tret = PTC_new" + tpName + "();\n");
             ret.append("\tPTC_u32 index = 0;");
+            if (typeNum == TYPE_SendRet)
+            {
+                ret.append("\tindex+=3;");
+            }
             for (size_t i = 0; i < subType.size(); i++)
             {
                 switch (subType[i].getTypeENum())
@@ -422,6 +466,17 @@ bool TypeDefine::judgeHasArray()
     return ret;
 }
 
+bool TypeDefine::judgeHasOther()
+{
+    bool ret = false;
+    for (size_t i = 0; i < subType.size(); i++)
+    {
+        if (subType[i].getTypeENum() == TYPE_other || subType[i].getTypeENum() == TYPE_others)
+            return true;
+    }
+    return ret;
+}
+
 const MyString TypeDefine::getShowOutFuntion(MyString perStr) const
 {
     MyString ret;
@@ -469,7 +524,7 @@ const MyString TypeDefine::getShowOutFuntion(MyString perStr, MyString mother) c
         ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + " = %lld\\n\"," + argStr + mother + varName + ");\n");
         break;
     case TYPE_f32:
-        ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + " = %f\\n\",(double)" + argStr + mother + varName + ");\n");
+        ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + " = %f\\n\",PTC_RETYPE(double," + argStr + mother + varName + "));\n");
         break;
     case TYPE_bool:
         ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + " = %s\\n\"," + argStr + "(" + mother + varName +
@@ -497,7 +552,7 @@ const MyString TypeDefine::getShowOutFuntion(MyString perStr, MyString mother) c
     case TYPE_f32s:
         ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + "_lengh = %u\\n\"," + argStr + mother + varName + "_lengh);\n");
         ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
-        ret.append("    PTC_PRINTF(\"" + perStr + formatStr + varName + "[%u] = %8f\\n\", i,(double)" + argStr + mother + varName + "[i]);\n");
+        ret.append("    PTC_PRINTF(\"" + perStr + formatStr + varName + "[%u] = %8f\\n\", i,PTC_RETYPE(double," + argStr + mother + varName + "[i]));\n");
         break;
 
     case TYPE_bools:

@@ -20,7 +20,7 @@ public:
     const MyString getCallbackFuncDeclare() const;
 
     const MyString getInterfaceName(void) const;
-    const unsigned short getInterFaceID(void) const { return interfaceID; }
+    unsigned short getInterFaceID(void) const { return interfaceID; }
 
 private:
     unsigned short interfaceID;

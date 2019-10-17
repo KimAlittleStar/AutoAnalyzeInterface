@@ -47,11 +47,11 @@ bool Interface::fillInterface(std::string str)
     interfaceName = buff[0];
     if ((buff[1][0] == '0') && (buff[1][1] == 'X' || buff[1][1] == 'x'))
     {
-        std::sscanf(buff[1].c_str() + 2, "%x", &interfaceID);
+        std::sscanf(buff[1].c_str() + 2, "%x", reinterpret_cast<unsigned int *>(&interfaceID));
     }
     else
     {
-        std::sscanf(buff[1].c_str(), "%d", &interfaceID);
+        std::sscanf(buff[1].c_str(), "%d", reinterpret_cast<int *>(&interfaceID));
     }
     buff = buff[2].splits("{= \n}");
     if (buff.size() != 4)

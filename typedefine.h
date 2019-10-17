@@ -33,18 +33,6 @@ typedef enum
     TYPE_SendRet = 23
 } TYPE_e;
 
-const static char *typeConvert[][4] = // typestr,Cstr,JavaStr
-    {
-        {"u8", "PTC_u8 ", "unsigned char ", reinterpret_cast<const char *>(TYPE_u8)},
-        {"s8", "PTC_s8 ", "signed char ", reinterpret_cast<const char *>(TYPE_s8)},
-        {"u16", "PTC_u16 ", "unsigned short ", reinterpret_cast<const char *>(TYPE_u16)},
-        {"s16", "PTC_s16 ", "signed short ", reinterpret_cast<const char *>(TYPE_s16)},
-        {"u32", "PTC_u32 ", "unsigned int ", reinterpret_cast<const char *>(TYPE_u32)},
-        {"s32", "PTC_s32 ", "signed int ", reinterpret_cast<const char *>(TYPE_s32)},
-        {"u64", "PTC_u64 ", "unsigned long long ", reinterpret_cast<const char *>(TYPE_u64)},
-        {"bool", "Boolean ", "bool ", reinterpret_cast<const char *>(TYPE_bool)},
-        {"f32", "PTC_f32 ", "float ", reinterpret_cast<const char *>(TYPE_f32)},
-        {"string", "char ", "String ", reinterpret_cast<const char *>(TYPE_string)}};
 
 typedef struct
 {
@@ -102,6 +90,7 @@ private:
     const MyString getFillfunctionStr();
 
     bool judgeHasArray();
+    bool judgeHasOther();
 };
 
 #endif // TYPEDEFINE_H

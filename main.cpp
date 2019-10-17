@@ -36,5 +36,29 @@ int main(int argn,char * args[])
     af.outputH_file(interfaceFilePath);
     af.outputCPP_file(interfaceFilePath);
     af.outputHPP_file(interfaceFilePath);
+    std::getchar();
     return 0;
+}
+#include "protocol.hpp"
+#include <string.h>
+void* ptc::PTC_malloc(unsigned long long size)
+{
+    return std::malloc(size);
+}
+void ptc::PTC_free(void* f)
+{
+    std::free(f);
+}
+void ptc::PTC_memset(void* des,int v,unsigned long long len)
+{
+    memset(des,v,len);
+}
+void* ptc::PTC_realloc(void* src,unsigned long long new_size)
+{
+    return std::realloc(src,new_size);
+}
+void* ptc::PTC_memcpy(void* des,void* src,unsigned long long len)
+{
+
+    return memcpy(des,src,len);
 }
