@@ -15,11 +15,11 @@ public:
 
     bool setInputfile(const MyString &inputfilePath);
 
-    bool outputC_file(MyString path = "");
-    bool outputH_file(MyString path = "");
-    bool outputCPP_file(MyString path = "");
-    bool outputHPP_file(MyString path = "");
-    bool outputJava_file(MyString path = "");
+    bool outputC_file(MyString path, MyString filename = ("protocol.c"), MyString incfile = ("protocol.h"));
+    bool outputH_file(MyString path, MyString filename = ("protocol.h"), MyString incfile = ("stdio.h"));
+    bool outputCPP_file(MyString path);
+    bool outputHPP_file(MyString path);
+    bool outputJava_file(MyString path);
 
 private:
     std::ifstream *inputfile = nullptr;

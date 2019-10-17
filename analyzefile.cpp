@@ -36,11 +36,12 @@ bool AnalyzeFile::setInputfile(const MyString &inputfilePath)
     return true;
 }
 
-bool AnalyzeFile::outputC_file(MyString path)
+bool AnalyzeFile::outputC_file(MyString path, MyString filename, MyString incfile)
 {
     std::cout << "filepath :" << path << "XXX.c" << std::endl;
-    path.append("protocol.c");
-    MyString text = "#include \"protocol.h\"\n";
+    path.append(filename);
+    MyString text = "#include \"" + incfile + "\"\n";
+    text.append("#ifdef __cplusplus\nusing namespace ptc;\nextern \"C\"\n{\n#endif\n");
     text.append("PTC_DECLARE_WRITE(u32,PTC_u32)\n");
     text.append("PTC_DECLARE_WRITE(s32,PTC_s32)\n");
     text.append("PTC_DECLARE_WRITE(u16, PTC_u16 )\n");
@@ -68,6 +69,8 @@ bool AnalyzeFile::outputC_file(MyString path)
 
     text.append(getCallbackFuncDeclare());
 
+    text.append("#ifdef __cplusplus\n}\n#endif\n");
+
     std::ofstream out(path);
     if (out.is_open())
     {
@@ -80,12 +83,13 @@ bool AnalyzeFile::outputC_file(MyString path)
     out.close();
     return true;
 }
-bool AnalyzeFile::outputH_file(MyString path)
+bool AnalyzeFile::outputH_file(MyString path, MyString filename, MyString incfile)
 {
     std::cout << "filepath :" << path << "protocol.h" << std::endl;
-    path.append("protocol.h");
+    path.append(filename);
     MyString text = "#ifndef PROTOCOL_H_INTERFACE_ \n#define PROTOCOL_H_INTERFACE_\n\n";
-    text.append("#include<string.h>\n#include<stdio.h>\n");
+    text.append("#ifdef __cplusplus\nnamespace ptc {\nextern \"C\"\n{\n#endif\n\n");
+    text.append("#include<string.h>\n#include<" + incfile + ">\n");
 
     text.append(getDefineBaseHfile());
     text.append(getCallbackFuncDefine());
@@ -94,8 +98,11 @@ bool AnalyzeFile::outputH_file(MyString path)
     {
         text.append(interfaceLib[i].getStrToH_file());
     }
+    text.append("#ifdef __cplusplus\n}\n}\n#endif");
     text.append("\n\n#endif\n\n");
+
     std::cout << "out of H file :" << text << std::endl;
+
     std::ofstream out(path);
     if (out.is_open())
     {
@@ -110,11 +117,14 @@ bool AnalyzeFile::outputH_file(MyString path)
 }
 bool AnalyzeFile::outputCPP_file(MyString path)
 {
+    outputC_file(path, "protocol.cpp", "protocol.hpp");
     return true;
 }
 
 bool AnalyzeFile::outputHPP_file(MyString path)
 {
+    outputH_file(path, "protocol.hpp");
+
     return true;
 }
 bool AnalyzeFile::outputJava_file(MyString path)
@@ -207,12 +217,14 @@ std::vector<MyString> *AnalyzeFile::getInterfaceList(const MyString &text)
 const MyString AnalyzeFile::getDefineBaseHfile()
 {
     MyString text;
-
+    //reinterpret
     ///< 定义NULL 指针
-    text.append("#ifndef NULL\n#ifdef __cplusplus\n#ifndef _WIN64\n"
-                "#define NULL 0\n#else\n#define NULL 0LL\n#endif  /* W64 */\n#else\n"
-                "#define NULL ((void *)0)\n#endif\n#endif\n\n");
 
+    text.append("#ifndef PTC_NULL\n#ifdef __cplusplus\n"
+                "#define PTC_NULL nullptr\n#else\n/* CPP */\n"
+                "#define PTC_NULL ((void *)0)\n#endif\n#endif\n\n");
+    text.append("#ifdef __cplusplus\n#define PTC_REPOINT(TYPE,VALUE) reinterpret_cast<TYPE>( VALUE )\n");
+    text.append("#else\n#define PTC_REPOINT(TYPE,VALUE) (TYPE )( VALUE )\n#endif \n");
     ///< 定义Boolean 自定义结构类
     text.append("typedef enum \n{\n\tTRUE = 1,\n\tFALSE = !TRUE\n} Boolean;\n\n");
 
@@ -264,13 +276,13 @@ const MyString AnalyzeFile::getDefineBaseHfile()
     text.append("#define PTC_DECLARE_TODATA(T)                                            \\\n");
     text.append("    inline PTC_u8 *PTC_todata##T(PTC_##T##_t *t, PTC_u32 *len) \\\n");
     text.append("    {                                                                    \\\n");
-    text.append("        PTC_u8 *ret = NULL;                                       \\\n");
+    text.append("        PTC_u8 *ret = PTC_NULL;                                       \\\n");
     text.append("        union {                                                          \\\n");
     text.append("            PTC_u8 ch[sizeof(*t)];                                \\\n");
     text.append("            PTC_##T##_t v;                                               \\\n");
     text.append("        } un;                                                            \\\n");
     text.append("        un.v = *t;                                                       \\\n");
-    text.append("        ret = (PTC_u8 *)PTC_malloc(sizeof(un));                   \\\n");
+    text.append("        ret = PTC_REPOINT(PTC_u8 *,PTC_malloc(sizeof(un)));                   \\\n");
     text.append("        PTC_memcpy(ret, un.ch, sizeof(un));                              \\\n");
     text.append("        (*len) += sizeof(un);                                            \\\n");
     text.append("        return ret;                                                      \\\n");
@@ -286,8 +298,8 @@ const MyString AnalyzeFile::getDefineBaseHfile()
     text.append("            PTC_##T##_t v;                                                               \\\n");
     text.append("        } un;                                                                          \\\n");
     text.append("        PTC_memcpy(un.ch, data, sizeof(un));                                           \\\n");
-    text.append("        if (ret == NULL)                                                               \\\n");
-    text.append("        ret = (PTC_##T##_t *)PTC_malloc(sizeof(un));                                 \\\n");
+    text.append("        if (ret == PTC_NULL)                                                               \\\n");
+    text.append("        ret = PTC_REPOINT(PTC_##T##_t *,PTC_malloc(sizeof(un)));                                 \\\n");
     text.append("        *ret = un.v;                                                                   \\\n");
     text.append("        (*len) += sizeof(un);                                                          \\\n");
     text.append("        return ret;                                                                    \\\n");

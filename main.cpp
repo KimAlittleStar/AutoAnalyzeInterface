@@ -34,5 +34,7 @@ int main(int argn,char * args[])
                             interfaceFilePath.size()-static_cast<size_t>(indexOfdir-interfaceFilePath.data()));
     af.outputC_file(interfaceFilePath);
     af.outputH_file(interfaceFilePath);
+    af.outputCPP_file(interfaceFilePath);
+    af.outputHPP_file(interfaceFilePath);
     return 0;
 }
