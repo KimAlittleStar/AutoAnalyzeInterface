@@ -153,7 +153,7 @@ const MyString TypeDefine::getStrToH_file(void)
     for (size_t i = 0; i < subType.size(); i++)
     {
         if (subType[i].getArrayType() == true)
-            ret.append("\tPTC_u32 " + subType[i].getVarName() + "_lengh ;\n");
+            ret.append("\tPTC_u16 " + subType[i].getVarName() + "_lengh ;\n");
         ret.append("\t" + subType[i].getTypeName_Cfamily() + " ");
         if (subType[i].getArrayType() == true)
             ret.append("* ");
@@ -231,7 +231,7 @@ const MyString TypeDefine::getDeletefunctionStr()
                 ret.append("\t\tif(m->" + subType[i].getVarName() + "!= PTC_NULL)\n\t\t{\n");
                 if (subType[i].getTypeENum() == TYPE_others)
                 {
-                    ret.append("\t\t\tfor(PTC_u32 i = 0;i<m->" + subType[i].getVarName() + "_lengh;i++)\n");
+                    ret.append("\t\t\tfor(PTC_u16 i = 0;i<m->" + subType[i].getVarName() + "_lengh;i++)\n");
                     ret.append("\t\t\t\tPTC_delete" + subType[i].getTypeName() + "(m->" + subType[i].getVarName() + " + i);\n");
                 }
                 ret.append("\t\t\tPTC_free(m->" + subType[i].getVarName() + ");\n");
@@ -319,11 +319,11 @@ const MyString TypeDefine::getTodatafunctionStr()
                 case TYPE_f32s:
                 case TYPE_bools:
                 case TYPE_string:
-                    ret.append("    PTC_writeu32(ret + lengh,t->" + subType[i].getVarName() + "_lengh);\n");
+                    ret.append("    PTC_writeu16(ret + lengh,t->" + subType[i].getVarName() + "_lengh);\n");
                     ret.append("    lengh += sizeof(t->" + subType[i].getVarName() + "_lengh);\n");
                     ret.append("    memlengh += t->" + subType[i].getVarName() + "_lengh * (sizeof(t->" + subType[i].getVarName() + "[0]));");
                     ret.append("    ret =  PTC_REPOINT(PTC_u8*,PTC_realloc(ret,memlengh));\n");
-                    ret.append("    for(PTC_u32 i = 0;i<t->" + subType[i].getVarName() + "_lengh;i++)\n");
+                    ret.append("    for(PTC_u16 i = 0;i<t->" + subType[i].getVarName() + "_lengh;i++)\n");
                     ret.append("    {\n");
                     ret.append("        PTC_write" + subType[i].getTypeName() + "(ret + lengh, t->" + subType[i].getVarName() + "[i]);\n");
                     ret.append("        lengh += sizeof(t->" + subType[i].getVarName() + "[0]);\n\n");
@@ -338,9 +338,9 @@ const MyString TypeDefine::getTodatafunctionStr()
                     ret.append("    PTC_free(pbuff);\n\tlengh+=otherLen;\n\n");
                     break;
                 case TYPE_others:
-                    ret.append("    PTC_writeu32(ret + lengh,t->" + subType[i].getVarName() + "_lengh);\n");
+                    ret.append("    PTC_writeu16(ret + lengh,t->" + subType[i].getVarName() + "_lengh);\n");
                     ret.append("    lengh += sizeof(t->" + subType[i].getVarName() + "_lengh);\n");
-                    ret.append("    for(PTC_u32 i = 0;i<t->" + subType[i].getVarName() + "_lengh;i++)\n");
+                    ret.append("    for(PTC_u16 i = 0;i<t->" + subType[i].getVarName() + "_lengh;i++)\n");
                     ret.append("    {\n");
                     ret.append("        otherLen = 0;\n");
                     ret.append("        pbuff = PTC_todata" + subType[i].getTypeName() + "(&t->" + subType[i].getVarName() + "[i],&otherLen);\n");
@@ -411,11 +411,11 @@ const MyString TypeDefine::getFillfunctionStr()
                 case TYPE_f32s:
                 case TYPE_bools:
                 case TYPE_string:
-                    ret.append("    ret->" + subType[i].getVarName() + "_lengh = PTC_readu32(data+index);\n");
+                    ret.append("    ret->" + subType[i].getVarName() + "_lengh = PTC_readu16(data+index);\n");
                     ret.append("    index += sizeof(ret->" + subType[i].getVarName() + "_lengh);\n");
                     ret.append("    ret->" + subType[i].getVarName() + " = PTC_REPOINT(" + subType[i].getTypeName_Cfamily() + " *,PTC_malloc(ret->" + subType[i].getVarName() +
                                "_lengh * sizeof(ret->" + subType[i].getVarName() + "[0])));\n");
-                    ret.append("    for(PTC_u32 i = 0;i<ret->" + subType[i].getVarName() + "_lengh ;i++)\n");
+                    ret.append("    for(PTC_u16 i = 0;i<ret->" + subType[i].getVarName() + "_lengh ;i++)\n");
                     ret.append("    {\n");
                     ret.append("        ret->" + subType[i].getVarName() + "[i] = PTC_read" + subType[i].getTypeName() + "(data+index);\n");
                     ret.append("        index += sizeof(ret->" + subType[i].getVarName() + "[0]);\n");
@@ -425,11 +425,11 @@ const MyString TypeDefine::getFillfunctionStr()
                     ret.append("    PTC_fill" + subType[i].getTypeName() + "(&(ret->" + subType[i].getVarName() + "),data+index,&index);\n");
                     break;
                 case TYPE_others:
-                    ret.append("    ret->" + subType[i].getVarName() + "_lengh = PTC_readu32(data+index);\n");
+                    ret.append("    ret->" + subType[i].getVarName() + "_lengh = PTC_readu16(data+index);\n");
                     ret.append("    index += sizeof(ret->" + subType[i].getVarName() + "_lengh);\n");
                     ret.append("    ret->" + subType[i].getVarName() + " = PTC_REPOINT(" + subType[i].getTypeName_Cfamily() + " *,PTC_malloc(ret->" + subType[i].getVarName() +
                                "_lengh * sizeof(ret->" + subType[i].getVarName() + "[0])));\n");
-                    ret.append("    for(PTC_u32 i = 0;i<ret->" + subType[i].getVarName() + "_lengh ;i++)\n");
+                    ret.append("    for(PTC_u16 i = 0;i<ret->" + subType[i].getVarName() + "_lengh ;i++)\n");
                     ret.append("    {\n");
                     ret.append("        PTC_fill" + subType[i].getTypeName() + "(ret->" + subType[i].getVarName() + "+i,data+index,&index);\n");
                     ret.append("    }\n\n");
@@ -534,30 +534,30 @@ const MyString TypeDefine::getShowOutFuntion(MyString perStr, MyString mother) c
     case TYPE_s8s:
     case TYPE_u16s:
         ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + "_lengh = %u\\n\"," + argStr + mother + varName + "_lengh);\n");
-        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("for(PTC_u16 i = 0;i<" + mother + varName + "_lengh;i++)\n");
         ret.append("    PTC_PRINTF(\"" + perStr + formatStr + varName + "[%u] = %8u\\n\", i," + argStr + mother + varName + "[i]);\n");
         break;
     case TYPE_s16s:
     case TYPE_u32s:
     case TYPE_s32s:
         ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + "_lengh = %u\\n\"," + argStr + mother + varName + "_lengh);\n");
-        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("for(PTC_u16 i = 0;i<" + mother + varName + "_lengh;i++)\n");
         ret.append("    PTC_PRINTF(\"" + perStr + formatStr + varName + "[%u] = %8d\\n\", i," + argStr + mother + varName + "[i]);\n");
         break;
     case TYPE_u64s:
         ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + "_lengh = %u\\n\"," + argStr + mother + varName + "_lengh);\n");
-        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("for(PTC_u16 i = 0;i<" + mother + varName + "_lengh;i++)\n");
         ret.append("    PTC_PRINTF(\"" + perStr + formatStr + varName + "[%u] = %8lld\\n\", i," + argStr + mother + varName + "[i]);\n");
         break;
     case TYPE_f32s:
         ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + "_lengh = %u\\n\"," + argStr + mother + varName + "_lengh);\n");
-        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("for(PTC_u16 i = 0;i<" + mother + varName + "_lengh;i++)\n");
         ret.append("    PTC_PRINTF(\"" + perStr + formatStr + varName + "[%u] = %8f\\n\", i,PTC_RETYPE(double," + argStr + mother + varName + "[i]));\n");
         break;
 
     case TYPE_bools:
         ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + "_lengh = %u\\n\"," + argStr + mother + varName + "_lengh);\n");
-        ret.append("for(PTC_u32 i = 0;i<" + mother + varName + "_lengh;i++)\n");
+        ret.append("for(PTC_u16 i = 0;i<" + mother + varName + "_lengh;i++)\n");
         ret.append("    PTC_PRINTF(\"" + perStr + formatStr + varName + "[%u] = %5s\\n\"," + argStr + " i,(" + mother + varName +
                    "[i] == TRUE)?(\"TRUE\"):(\"FALSE\"));\n");
         break;
@@ -577,7 +577,7 @@ const MyString TypeDefine::getShowOutFuntion(MyString perStr, MyString mother) c
         MyString item = tpName + "_i";
         MyString tempStr;
         ret.append("PTC_PRINTF(\"" + perStr + formatStr + varName + "_lengh = %u\\n\"," + argStr + mother + varName + "_lengh);\n");
-        ret.append("for(PTC_u32 " + item + " = 0;" + item + "<" + mother + varName + "_lengh;" + item + "++)\n");
+        ret.append("for(PTC_u16 " + item + " = 0;" + item + "<" + mother + varName + "_lengh;" + item + "++)\n");
         ret.append("{\n");
         for (size_t i = 0; i < subType.size(); i++)
         {
